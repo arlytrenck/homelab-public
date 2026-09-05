@@ -5,6 +5,8 @@ _For anything sensitive, record where the real value lives in `docs/secrets.md`.
 
 | stack | key | compose default |
 |---|---|---|
+| analytics | `UMAMI_APP_SECRET` | changeme-long-random |
+| analytics | `UMAMI_DB_PASS` | changeme-long-random |
 | automation | `N8N_ENCRYPTION_KEY` | — |
 | immich | `DB_DATABASE_NAME` | — |
 | immich | `DB_DATA_LOCATION` | ./postgres |

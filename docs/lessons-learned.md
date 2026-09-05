@@ -84,3 +84,32 @@ using a feature it already had, at zero additional memory footprint. The
 dedicated tool's actual advantages (multi-user RBAC, audit policies) matter
 for a team, not a single-operator homelab. Before adding a new service,
 check whether something you're already running can do 90% of the job first.
+
+## A forward-auth block and an authorization rule are two separate steps
+
+Wiring a new subdomain up to forward-auth-based SSO has two halves: the
+reverse proxy config that says "ask the auth service before letting this
+through," and the auth service's own policy that says what the answer
+should be for that specific domain. Adding only the first half looks
+completely correct in the proxy config — the directive is right there,
+pointed at the right auth endpoint — and still 403s every request,
+including from the person who configured it, because the auth service's
+default policy for anything it doesn't recognize is deny. The failure mode
+looks like a network/firewall problem (a wrong IP allowlist, a NAT
+oddity) long before it looks like "I forgot the other half," because
+nothing about the proxy config is actually wrong. If a new forward-auth
+vhost 403s everyone regardless of source, check the auth service's own
+access-control rules before anything else.
+
+## A dashboard panel with more than one query needs a unique ID per query
+
+A handful of dashboard panels that plotted multiple series (memory used +
+cached, three load averages, network rx/tx) all silently showed "No data,"
+while every single-series panel on the same dashboard worked fine. The
+cause: every query *within one panel* needs its own unique reference ID —
+copy-pasting a query as a starting point for a second one, without also
+changing its ID to something unique, produces a dashboard that loads
+without error and just quietly drops the results. Single-query panels
+never hit this because there's nothing to collide with. If a multi-series
+panel renders blank next to working single-series ones, check for
+duplicate query IDs before assuming the underlying metrics are missing.

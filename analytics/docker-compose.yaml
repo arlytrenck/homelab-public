@@ -1,0 +1,67 @@
+# analytics stack: Umami (self-hosted, privacy-friendly website analytics).
+#
+# Trial deployment for example.com — bound to 127.0.0.1 + LAN only for now,
+# no reverse-proxy vhost yet (staged separately once the tracking script is
+# actually wired into the live site). Postgres-backed per upstream's own
+# image variant.
+#
+# Secrets (DB password, app secret) live in ./.env (chmod 600, gitignored).
+name: analytics
+
+x-common: &common
+  security_opt:
+    - no-new-privileges:true
+  logging:
+    driver: json-file
+    options:
+      max-size: "10m"
+      max-file: "5"
+
+services:
+  umami-db:
+    <<: *common
+    mem_limit: 512m
+    pids_limit: 256
+    image: postgres:16-alpine
+    container_name: umami-db
+    restart: unless-stopped
+    environment:
+      - POSTGRES_DB=umami
+      - POSTGRES_USER=umami
+      - POSTGRES_PASSWORD=${UMAMI_DB_PASS:?required}
+    volumes:
+      - umami_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U umami -d umami"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  umami:
+    <<: *common
+    mem_limit: 512m
+    pids_limit: 256
+    image: ghcr.io/umami-software/umami:postgresql-latest
+    container_name: umami
+    restart: unless-stopped
+    depends_on:
+      umami-db:
+        condition: service_healthy
+    environment:
+      - DATABASE_URL=postgresql://umami:${UMAMI_DB_PASS:?required}@umami-db:5432/umami
+      - APP_SECRET=${UMAMI_APP_SECRET:?required}
+    ports:
+      - "127.0.0.1:3006:3000"
+      - "10.0.0.10:3006:3000"
+    networks:
+      - default
+      - frontend
+
+volumes:
+  umami_db_data:
+
+networks:
+  default:
+  frontend:
+    external: true

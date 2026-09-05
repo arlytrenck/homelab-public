@@ -14,6 +14,12 @@
 # autoheal restarts any container labelled `autoheal=true` when it goes
 #   unhealthy — deliberately NOT the databases / authelia.
 #
+# loki + promtail: centralized log aggregation. Promtail discovers every
+#   running container via the docker socket (read-only) and ships its
+#   json-file logs to loki; point Grafana's Explore tab at it to search/
+#   correlate logs alongside the Prometheus metrics. 14-day retention
+#   (compactor). Local-only — no reverse-proxy vhost.
+#
 # Secrets (gotify admin pass, per-app tokens, the watchtower shoutrrr URL) live
 # in ./.env (chmod 600, gitignored). ./.env.example documents every key.
 name: monitoring
@@ -359,9 +365,39 @@ services:
     labels:
       - "com.centurylinklabs.watchtower.enable=false"
 
+  loki:
+    <<: *common
+    mem_limit: 512m
+    pids_limit: 256
+    image: grafana/loki:latest
+    container_name: loki
+    restart: unless-stopped
+    command: -config.file=/etc/loki/loki-config.yml
+    volumes:
+      - ./loki/loki-config.yml:/etc/loki/loki-config.yml:ro
+      - loki_data:/loki
+    # no healthcheck: this image is distroless (no wget/sh/curl) and Loki has
+    # no built-in healthcheck subcommand, same situation as alertmanager-gotify.
+
+  promtail:
+    <<: *common
+    mem_limit: 256m
+    pids_limit: 256
+    image: grafana/promtail:latest
+    container_name: promtail
+    restart: unless-stopped
+    depends_on:
+      - loki
+    command: -config.file=/etc/promtail/promtail-config.yml
+    volumes:
+      - ./promtail/promtail-config.yml:/etc/promtail/promtail-config.yml:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+
 volumes:
   gotify_data:
   alertmanager_data:
+  loki_data:
 
 networks:
   default:

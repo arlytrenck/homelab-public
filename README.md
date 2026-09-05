@@ -28,9 +28,10 @@ that shaped the conventions here, so you can skip repeating them.
 | `identity/` | `docker-compose.yaml` | Authelia (forward-auth SSO) |
 | `media/` | `docker-compose.yaml` | Emby, Sonarr, Radarr, Prowlarr, FlareSolverr, Bazarr, Seerr, Tdarr, Komga, TinyMediaManager, Jellystat (+ its db) |
 | `media/immich/` | `docker-compose.yml` | Immich server / ML / Postgres / Redis (kept close to the upstream template) |
-| `monitoring/` | `docker-compose.yaml` | Watchtower (monitor-only), Prometheus, Grafana, node-exporter, cAdvisor, Uptime Kuma, Dozzle, Gotify, Alertmanager (+ a Gotify bridge), autoheal |
+| `monitoring/` | `docker-compose.yaml` | Watchtower (monitor-only), Prometheus, Grafana, node-exporter, cAdvisor, Uptime Kuma, Dozzle, Gotify, Alertmanager (+ a Gotify bridge), autoheal, Loki + Promtail |
 | `security/` | `docker-compose.yaml` | Vaultwarden |
 | `automation/` | `docker-compose.yaml` | n8n |
+| `analytics/` | `docker-compose.yaml` | Umami (+ its db) — self-hosted website analytics |
 | `networking/` | `bootstrap.sh` + `README.md` | creates the shared external `frontend` Docker network |
 
 One Compose project per directory; the project `name:` is set explicitly in
