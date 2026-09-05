@@ -113,3 +113,20 @@ without error and just quietly drops the results. Single-query panels
 never hit this because there's nothing to collide with. If a multi-series
 panel renders blank next to working single-series ones, check for
 duplicate query IDs before assuming the underlying metrics are missing.
+
+## A service with a public DNS record can still fail to resolve on your own LAN
+
+Some services want a real public-facing DNS record (a password manager, a
+photo library, an auth portal) so they're reachable from outside the house.
+Once that record points at the public/WAN IP, clients *inside* the LAN often
+can't reach it at all, even though the exact same record works fine from a
+phone on cellular. The cause is NAT hairpinning: a LAN client's request has
+to go out to the router's WAN IP and back in, and a lot of consumer routers
+simply don't support routing a packet back to where it came from. The fix
+isn't on the service side — it's a local DNS resolver (AdGuard Home, Pi-hole,
+plain dnsmasq, whatever you're comfortable with) that overrides just those
+specific domains to the LAN IP for internal clients, while everything else
+still resolves normally through the real upstream. If a public-facing service
+works from outside the house but times out or fails from inside it, check
+whether you're hairpinning before assuming it's a firewall or DNS
+misconfiguration.

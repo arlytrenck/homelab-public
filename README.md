@@ -32,7 +32,7 @@ that shaped the conventions here, so you can skip repeating them.
 | `security/` | `docker-compose.yaml` | Vaultwarden |
 | `automation/` | `docker-compose.yaml` | n8n |
 | `analytics/` | `docker-compose.yaml` | Umami (+ its db) — self-hosted website analytics |
-| `networking/` | `bootstrap.sh` + `README.md` | creates the shared external `frontend` Docker network |
+| `networking/` | `bootstrap.sh` + `docker-compose.yaml` (AdGuard Home) + `README.md` | creates the shared external `frontend` Docker network; AdGuard Home = LAN DNS split-horizon + ad blocking |
 
 One Compose project per directory; the project `name:` is set explicitly in
 each file. `frontend` is an **external** Docker network (shared by homepage +

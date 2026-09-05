@@ -1,0 +1,50 @@
+# networking stack: AdGuard Home — LAN DNS resolver with per-domain
+# rewrites (handy for split-horizon setups: services with a public-facing DNS
+# record often fail to resolve from inside the LAN itself because the router
+# can't hairpin-NAT a LAN client's request back in through its own WAN IP —
+# overriding just those records to the LAN IP for internal clients fixes it)
+# plus network-wide ad/tracker blocking and a web UI.
+#
+# DNS (53/tcp+udp) binds directly to the host's LAN IP, not 0.0.0.0, so it
+# doesn't fight anything else already using that port on the host. Web UI is
+# 127.0.0.1-only; put your own reverse proxy + auth in front for LAN access.
+#
+# Configure via AdGuard's own REST API (its install wizard's endpoints)
+# rather than hand-writing AdGuardHome.yaml — the config schema has had 30+
+# versions across releases, so scripting the same API calls its own setup
+# wizard makes is the only way to stay compatible with whatever version pulls
+# as "latest". See their OpenAPI spec (openapi/openapi.yaml in their repo) for
+# the exact request/response shapes: /control/install/configure to set the
+# admin account + listen addresses, /control/rewrite/add per domain override,
+# /control/dns_config for upstream servers.
+name: networking
+
+services:
+  adguardhome:
+    image: adguard/adguardhome:latest
+    container_name: adguardhome
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 256m
+    pids_limit: 256
+    ports:
+      - "10.0.0.10:53:53/tcp"
+      - "10.0.0.10:53:53/udp"
+      - "127.0.0.1:3007:3000/tcp"
+    volumes:
+      - ./adguard/work:/opt/adguardhome/work
+      - ./adguard/conf:/opt/adguardhome/conf
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+    networks:
+      - default
+      - frontend
+
+networks:
+  default:
+  frontend:
+    external: true
