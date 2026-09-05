@@ -1,0 +1,57 @@
+# The monitoring stack watching itself.
+groups:
+  - name: monitoring
+    rules:
+      - alert: PrometheusTargetMissing
+        expr: up == 0
+        for: 5m
+        labels: { severity: warning }
+        annotations:
+          priority: "5"
+          summary: "Prometheus target {{ $labels.job }} is down"
+          description: "{{ $labels.job }} ({{ $labels.instance }}) has been unscrapeable for 5 minutes."
+
+      - alert: PrometheusConfigReloadFailed
+        expr: prometheus_config_last_reload_successful == 0
+        for: 5m
+        labels: { severity: critical }
+        annotations:
+          priority: "8"
+          summary: "Prometheus config reload failed"
+          description: "The running Prometheus config is stale — the last reload on {{ $labels.instance }} errored."
+
+      - alert: PrometheusRuleEvaluationFailures
+        expr: increase(prometheus_rule_evaluation_failures_total[10m]) > 0
+        for: 0m
+        labels: { severity: warning }
+        annotations:
+          priority: "4"
+          summary: "Prometheus rule evaluations failing"
+          description: "{{ $value }} rule-eval failures in 10m on {{ $labels.instance }} — a rule file is probably malformed."
+
+      - alert: AlertmanagerDown
+        expr: up{job="alertmanager"} == 0
+        for: 5m
+        labels: { severity: critical }
+        annotations:
+          priority: "8"
+          summary: "Alertmanager is down"
+          description: "Alerts cannot be delivered — Alertmanager on {{ $labels.instance }} is unreachable."
+
+      - alert: AlertmanagerNotificationFailures
+        expr: increase(alertmanager_notifications_failed_total[15m]) > 0
+        for: 0m
+        labels: { severity: warning }
+        annotations:
+          priority: "5"
+          summary: "Alertmanager failing to deliver notifications"
+          description: "{{ $value }} failed notifications in 15m via {{ $labels.integration }} — check the gotify bridge / gotify."
+
+      - alert: CadvisorDown
+        expr: up{job="cadvisor"} == 0
+        for: 5m
+        labels: { severity: warning }
+        annotations:
+          priority: "5"
+          summary: "cAdvisor is down"
+          description: "Per-container metrics are unavailable — cAdvisor on {{ $labels.instance }} is unreachable."

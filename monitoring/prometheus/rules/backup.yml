@@ -1,0 +1,77 @@
+# Backup / snapshot / restore-drill freshness.
+# Metrics come from *.prom textfiles written by the cron scripts into
+# /var/lib/node_exporter/textfile and scraped via node-exporter.
+groups:
+  - name: backup
+    rules:
+      - alert: DockerBackupMetricMissing
+        expr: absent(homelab_backup_last_success_timestamp)
+        for: 6h
+        labels: { severity: warning }
+        annotations:
+          priority: "5"
+          summary: "No backup_docker.sh success metric"
+          description: "node-exporter is not exposing homelab_backup_last_success_timestamp — the nightly backup may not be running, or the textfile collector is misconfigured."
+
+      - alert: DockerBackupStale
+        expr: time() - homelab_backup_last_success_timestamp > 172800
+        for: 15m
+        labels: { severity: critical }
+        annotations:
+          priority: "8"
+          summary: "backup_docker.sh has not succeeded in 48h"
+          description: "Last successful /docker backup was {{ $value | humanizeDuration }} ago."
+
+      - alert: SnapshotStale
+        expr: time() - homelab_snapshot_last_success_timestamp > 691200
+        for: 15m
+        labels: { severity: warning }
+        annotations:
+          priority: "4"
+          summary: "Config snapshots stale (>8 days)"
+          description: "run-snapshots.sh last fully succeeded {{ $value | humanizeDuration }} ago."
+
+      - alert: SnapshotComponentFailing
+        expr: homelab_snapshot_component_ok == 0
+        for: 25h
+        labels: { severity: warning }
+        annotations:
+          priority: "4"
+          summary: "Snapshot component {{ $labels.component }} failing"
+          description: "{{ $labels.component }} has failed every run for over a day (missing token / expired scope?)."
+
+      - alert: ResticBackupStale
+        expr: time() - homelab_restic_last_success_timestamp > 172800
+        for: 15m
+        labels: { severity: critical }
+        annotations:
+          priority: "8"
+          summary: "restic backup has not succeeded in 48h"
+          description: "Last successful restic run was {{ $value | humanizeDuration }} ago — deduped history is not advancing."
+
+      - alert: ResticCheckFailing
+        expr: homelab_restic_check_ok == 0
+        for: 15m
+        labels: { severity: critical }
+        annotations:
+          priority: "9"
+          summary: "restic repository check is failing"
+          description: "`restic check` reported repository damage on the last run — investigate before the next prune."
+
+      - alert: RestoreDrillStale
+        expr: time() - homelab_restore_drill_last_success_timestamp > 3456000
+        for: 1h
+        labels: { severity: warning }
+        annotations:
+          priority: "4"
+          summary: "No successful restore drill in 40 days"
+          description: "restore-drill.sh has not passed since {{ $value | humanizeDuration }} ago — the backups are unverified."
+
+      - alert: RestoreDrillFailed
+        expr: homelab_restore_drill_ok == 0
+        for: 15m
+        labels: { severity: critical }
+        annotations:
+          priority: "9"
+          summary: "Last restore drill FAILED"
+          description: "restore-drill.sh could not reconstruct data from the backups — the backup chain is not trustworthy right now."

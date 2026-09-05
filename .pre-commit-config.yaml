@@ -1,0 +1,48 @@
+# Pre-commit guardrails for this repo.
+#
+#   pipx install pre-commit      # or: pip install --user pre-commit
+#   pre-commit install           # run once, at the repo root — installs the git hook
+#   pre-commit run --all-files   # check everything now
+#
+# After this, every `git commit` runs: secret scan, whitespace tidy, and a hard
+# block on committing a real .env file.
+
+minimum_pre_commit_version: "3.5.0"
+
+repos:
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.21.2
+    hooks:
+      - id: gitleaks
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-merge-conflict
+      - id: check-added-large-files
+        args: ["--maxkb=512"]
+      - id: check-yaml
+        args: ["--allow-multiple-documents"]
+        # Homepage's services.yaml/widgets.yaml use {{HOMEPAGE_VAR_*}} template
+        # placeholders that are not valid YAML until Homepage resolves them.
+        exclude: '^frontend/homepage/(services|widgets|settings)\.yaml$'
+
+  - repo: local
+    hooks:
+      - id: no-real-env
+        name: block committing a real .env (only .env.example belongs in git)
+        language: fail
+        entry: >-
+          A real .env file is staged. Secrets never go in git — keep values in
+          .env (gitignored) and commit only .env.example.
+        files: '(^|/)\.env(\.[^/]*)?$'
+        exclude: '\.env\.example$|\.env\.example\.extra$|\.env\.sample$'
+
+      - id: compose-config
+        name: docker compose config (all stacks)
+        language: system
+        entry: tools/check-compose.sh
+        pass_filenames: false
+        files: '(^|/)(docker-)?compose\.ya?ml$|\.env\.example(\.extra)?$'

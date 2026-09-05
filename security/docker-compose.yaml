@@ -1,0 +1,33 @@
+# security stack — Vaultwarden (Bitwarden-compatible password vault).
+#   Published on 127.0.0.1 only; the host reverse proxy fronts vault.example.com.
+name: security
+
+services:
+  vaultwarden:
+    image: vaultwarden/server:latest
+    container_name: vaultwarden
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 512m
+    pids_limit: 512
+    environment:
+      - DOMAIN=https://vault.example.com
+      - SIGNUPS_ALLOWED=false
+    ports:
+      - "127.0.0.1:8080:80"
+    volumes:
+      - ./vaultwarden:/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS -o /dev/null http://127.0.0.1:80/alive || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+    labels:
+      - "com.centurylinklabs.watchtower.enable=false"

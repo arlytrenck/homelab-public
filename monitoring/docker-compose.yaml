@@ -1,0 +1,369 @@
+# monitoring stack: Prometheus/Grafana/cAdvisor observability + alerting +
+# notifications + self-healing.
+#
+# Prometheus + Grafana publish on 127.0.0.1 only and also join the external
+# `frontend` network so homepage can reach them by name. Grafana is exposed
+# publicly as grf.example.com via the reverse proxy + forward-auth SSO.
+# Prometheus stays local-only (SSH-tunnel 127.0.0.1:9090 for the expr browser).
+# uptime-kuma runs host-networked; its UI is 10.0.0.10:3002 (no reverse-proxy vhost).
+#
+# Alerting path:  Prometheus rules -> alertmanager -> alertmanager-gotify -> gotify
+#   gotify UI/API: http://10.0.0.10:8070  (LAN + VPN mesh only; token auth)
+# watchtower is MONITOR-ONLY: it reports available image updates to gotify and
+#   never applies them. Apply updates by hand after reading release notes.
+# autoheal restarts any container labelled `autoheal=true` when it goes
+#   unhealthy — deliberately NOT the databases / authelia.
+#
+# Secrets (gotify admin pass, per-app tokens, the watchtower shoutrrr URL) live
+# in ./.env (chmod 600, gitignored). ./.env.example documents every key.
+name: monitoring
+
+x-common: &common
+  security_opt:
+    - no-new-privileges:true
+  logging:
+    driver: json-file
+    options:
+      max-size: "10m"
+      max-file: "5"
+
+services:
+  watchtower:
+    <<: *common
+    mem_limit: 256m
+    pids_limit: 256
+    image: nickfedor/watchtower:latest
+    container_name: watchtower
+    restart: unless-stopped
+    environment:
+      - TZ=America/New_York
+      # MONITOR-ONLY: check for newer images and notify, never pull/recreate.
+      - WATCHTOWER_MONITOR_ONLY=true
+      - WATCHTOWER_NO_STARTUP_MESSAGE=true
+      - WATCHTOWER_NOTIFICATION_REPORT=true
+      - WATCHTOWER_NOTIFICATIONS_LEVEL=info
+      # shoutrrr gotify URL, incl. the watchtower app token — set in ./.env
+      - WATCHTOWER_NOTIFICATION_URL=${WATCHTOWER_NOTIFICATION_URL:-}
+      - WATCHTOWER_SCHEDULE=0 0 2 * * *    # daily 02:00 — report only
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    labels:
+      - "com.centurylinklabs.watchtower.enable=false"   # don't update watchtower itself
+
+  prometheus:
+    <<: *common
+    mem_limit: 2g
+    pids_limit: 512
+    image: prom/prometheus:latest
+    container_name: prometheus
+    restart: unless-stopped
+    user: "1000:1000"
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--storage.tsdb.retention.time=30d"
+      - "--web.enable-lifecycle"
+      # so the "Go to source" link in gotify alerts is reachable (SSH-tunnel to :9090)
+      - "--web.external-url=http://127.0.0.1:9090/"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./prometheus/rules:/etc/prometheus/rules:ro
+      - ./prometheus/data:/prometheus
+    ports:
+      - "127.0.0.1:9090:9090"
+    networks:
+      - default
+      - frontend
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:9090/-/healthy"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+  node-exporter:
+    <<: *common
+    mem_limit: 256m
+    pids_limit: 256
+    image: quay.io/prometheus/node-exporter:latest
+    container_name: node-exporter
+    restart: unless-stopped
+    command:
+      - "--path.rootfs=/host"
+      - "--path.procfs=/host/proc"
+      - "--path.sysfs=/host/sys"
+      - "--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|run)($$|/)"
+      # cron scripts drop *.prom files here (backup / snapshot / restic /
+      # restore-drill / cert freshness) — a lightweight way to get ad-hoc
+      # script results into Prometheus without writing a custom exporter.
+      - "--collector.textfile.directory=/host/docker/monitoring/textfile"
+    volumes:
+      - /:/host:ro,rslave
+    networks:
+      - default
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:9100/metrics"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  cadvisor:
+    <<: *common
+    mem_limit: 512m
+    pids_limit: 512
+    # :latest on gcr.io is stale and never moves; pinned to the running digest.
+    # Check https://github.com/google/cadvisor/releases and bump deliberately.
+    image: gcr.io/cadvisor/cadvisor@sha256:3de2bd5203120b866d74a9b283b2ffb8ec382fbf9dc321814700c6ea6f44ec57
+    container_name: cadvisor
+    restart: unless-stopped
+    privileged: true
+    devices:
+      - /dev/kmsg
+    command:
+      - "--housekeeping_interval=30s"
+      - "--docker_only=true"
+      - "--store_container_labels=false"
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+    networks:
+      - default
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8080/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  grafana:
+    <<: *common
+    mem_limit: 1g
+    pids_limit: 1024
+    image: grafana/grafana:latest
+    container_name: grafana
+    restart: unless-stopped
+    user: "1000:1000"
+    depends_on:
+      - prometheus
+    environment:
+      - TZ=America/New_York
+      - GF_SERVER_ROOT_URL=https://grf.example.com
+      - GF_ANALYTICS_REPORTING_ENABLED=false
+      - GF_ANALYTICS_CHECK_FOR_UPDATES=false
+      - GF_USERS_ALLOW_SIGN_UP=false
+      # SSO via the forward-auth headers the reverse proxy passes through
+      - GF_AUTH_PROXY_ENABLED=true
+      - GF_AUTH_PROXY_HEADER_NAME=Remote-User
+      - GF_AUTH_PROXY_HEADER_PROPERTY=username
+      - GF_AUTH_PROXY_AUTO_SIGN_UP=true
+      - GF_AUTH_PROXY_SYNC_TTL=60
+      - GF_AUTH_PROXY_WHITELIST=172.16.0.0/12,127.0.0.1
+      - GF_AUTH_PROXY_HEADERS=Email:Remote-Email Name:Remote-Name Groups:Remote-Groups
+      # issue a session cookie after header auth, so an authenticated admin
+      # keeps full rights on the /api/* routes carved out for the embeds
+      - GF_AUTH_PROXY_ENABLE_LOGIN_TOKEN=true
+      # Anonymous read-only access + framing, for the panel embeds on homepage.
+      # The reverse proxy only lets /d-solo + assets + query API reach these
+      # unauthenticated; the interactive UI stays behind forward-auth 2FA.
+      - GF_SECURITY_ALLOW_EMBEDDING=true
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_NAME=Main Org.
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Viewer
+      - GF_SECURITY_COOKIE_SAMESITE=lax
+    volumes:
+      - ./grafana/data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+    ports:
+      - "127.0.0.1:3001:3000"
+    networks:
+      - default
+      - frontend
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:3000/api/health || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    labels:
+      - "autoheal=true"
+
+  uptime-kuma:
+    <<: *common
+    mem_limit: 512m
+    pids_limit: 512
+    image: louislam/uptime-kuma:1.23.16
+    container_name: uptime-kuma
+    restart: unless-stopped
+    network_mode: host              # reach 127.0.0.1:<svc> origins + LAN + public URLs
+    environment:
+      - TZ=America/New_York
+      - UPTIME_KUMA_PORT=3002       # LAN-only UI at http://10.0.0.10:3002 (no reverse-proxy vhost)
+      - UPTIME_KUMA_HOST=10.0.0.10  # bind the LAN IP only, never 0.0.0.0
+    volumes:
+      - ./uptime-kuma/data:/app/data
+      - /var/run/docker.sock:/var/run/docker.sock:ro   # Docker Container monitors
+    extra_hosts:
+      - "example.com:127.0.0.1"    # origin check hits the reverse proxy directly, not the public edge
+    healthcheck:
+      test: ["CMD-SHELL", "extra/healthcheck"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    labels:
+      - "autoheal=true"
+
+  dozzle:
+    <<: *common
+    image: amir20/dozzle:latest
+    container_name: dozzle
+    restart: unless-stopped
+    mem_limit: 256m
+    pids_limit: 256
+    environment:
+      - TZ=America/New_York
+      - DOZZLE_NO_ANALYTICS=true
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro   # read-only: live container logs in the browser
+    ports:
+      - "127.0.0.1:8087:8080"    # for the reverse-proxy vhost (LAN reaches it there)
+    networks:
+      - default
+    healthcheck:
+      test: ["CMD", "/dozzle", "healthcheck"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    labels:
+      - "autoheal=true"
+
+  # --- notifications ------------------------------------------------------------
+  gotify:
+    <<: *common
+    mem_limit: 128m
+    pids_limit: 128
+    image: gotify/server:latest
+    container_name: gotify
+    restart: unless-stopped
+    environment:
+      - TZ=America/New_York
+      - GOTIFY_SERVER_SSL_ENABLED=false
+      - GOTIFY_REGISTRATION=false
+      - GOTIFY_PASSSTRENGTH=10
+      - GOTIFY_DEFAULTUSER_NAME=admin
+      - GOTIFY_DEFAULTUSER_PASS=${GOTIFY_DEFAULTUSER_PASS:?set in monitoring/.env}
+    volumes:
+      - gotify_data:/app/data
+    ports:
+      - "127.0.0.1:8070:80"
+      - "10.0.0.10:8070:80"    # LAN + mesh-VPN reachable
+    networks:
+      - default
+      - frontend
+    labels:
+      # no autoheal here: the alert path runs THROUGH gotify, and a mis-firing
+      # healthcheck + autoheal would loop it. Watch gotify from uptime-kuma.
+      - "com.centurylinklabs.watchtower.enable=false"   # pin gotify; update by hand
+    healthcheck:
+      # gotify/server (debian) ships curl, not wget
+      test: ["CMD-SHELL", "curl -sf http://localhost:80/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 20s
+
+  # --- alert routing ---------------------------------------------------------
+  alertmanager:
+    <<: *common
+    mem_limit: 256m
+    pids_limit: 256
+    image: prom/alertmanager:latest
+    container_name: alertmanager
+    restart: unless-stopped
+    command:
+      - "--config.file=/etc/alertmanager/alertmanager.yml"
+      - "--storage.path=/alertmanager"
+      - "--web.listen-address=:9093"
+      - "--web.external-url=http://127.0.0.1:9093/"
+      # single node — disable the gossip cluster. With it enabled, this AM
+      # wedged its dispatcher after a batch of failed notifications and
+      # stopped delivering until restarted. HA clustering is for AM pairs only.
+      - "--cluster.listen-address="
+    volumes:
+      - ./alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+      - ./alertmanager/smtp_password:/etc/alertmanager/smtp_password:ro
+      - alertmanager_data:/alertmanager
+    ports:
+      - "127.0.0.1:9093:9093"
+    networks:
+      - default
+      - frontend          # so homepage can health-check + widget alertmanager:9093
+    depends_on:
+      - alertmanager-gotify
+    labels:
+      - "autoheal=true"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://localhost:9093/-/healthy || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+  # Alertmanager has no native Gotify receiver — this translates its webhook
+  # payload into Gotify messages. Alert `priority` annotation -> Gotify priority.
+  alertmanager-gotify:
+    <<: *common
+    mem_limit: 128m
+    pids_limit: 128
+    image: ghcr.io/druggeri/alertmanager_gotify_bridge:latest
+    container_name: alertmanager-gotify
+    restart: unless-stopped
+    environment:
+      - TZ=America/New_York
+      - GOTIFY_ENDPOINT=http://gotify:80
+      # empty until the gotify bootstrap step runs; recreate this container afterwards
+      - GOTIFY_TOKEN=${GOTIFY_TOKEN_ALERTMANAGER:-}
+      # bind :8080 and path /gotify_webhook are the image defaults
+      - DEFAULT_PRIORITY=5
+      - EXTENDED_DETAILS=true
+    networks:
+      - default
+    depends_on:
+      - gotify
+    labels:
+      - "autoheal=true"
+
+  # --- self-healing --------------------------------------------------------------
+  # Restarts a container ONLY when Docker reports it `unhealthy` AND it carries
+  # the `autoheal=true` label. Databases, authelia, immich_server and emby are
+  # deliberately excluded (a mid-flight restart there does more harm than good).
+  autoheal:
+    <<: *common
+    mem_limit: 64m
+    pids_limit: 64
+    image: willfarrell/autoheal:latest
+    container_name: autoheal
+    restart: unless-stopped
+    environment:
+      - TZ=America/New_York
+      - AUTOHEAL_CONTAINER_LABEL=autoheal
+      - AUTOHEAL_INTERVAL=15
+      - AUTOHEAL_START_PERIOD=120
+      - AUTOHEAL_DEFAULT_STOP_TIMEOUT=20
+      - DOCKER_SOCK=/var/run/docker.sock
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    labels:
+      - "com.centurylinklabs.watchtower.enable=false"
+
+volumes:
+  gotify_data:
+  alertmanager_data:
+
+networks:
+  default:
+  frontend:
+    external: true

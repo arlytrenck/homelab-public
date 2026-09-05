@@ -1,0 +1,41 @@
+# TLS cert expiry for the example.com vhosts.
+# homelab_ssl_cert_seconds_left{host="..."} is written daily by
+# toolkit/check-certs.sh --textfile  (openssl s_client against :443).
+groups:
+  - name: certs
+    rules:
+      - alert: CertMetricMissing
+        expr: absent(homelab_ssl_cert_seconds_left)
+        for: 26h
+        labels: { severity: warning }
+        annotations:
+          priority: "3"
+          summary: "No TLS-expiry metric"
+          description: "check-certs.sh --textfile has not produced homelab_ssl_cert_seconds_left in over a day."
+
+      - alert: CertExpiringSoon
+        expr: homelab_ssl_cert_seconds_left < 14 * 86400
+        for: 30m
+        labels: { severity: warning }
+        annotations:
+          priority: "6"
+          summary: "TLS cert for {{ $labels.host }} expires in <14 days"
+          description: "{{ $labels.host }} cert has {{ $value | humanizeDuration }} left — check the ACME/Caddy renewal."
+
+      - alert: CertExpiringVerySoon
+        expr: homelab_ssl_cert_seconds_left < 3 * 86400
+        for: 15m
+        labels: { severity: critical }
+        annotations:
+          priority: "9"
+          summary: "TLS cert for {{ $labels.host }} expires in <3 days"
+          description: "{{ $labels.host }} cert has {{ $value | humanizeDuration }} left — renewal is broken."
+
+      - alert: CertExpired
+        expr: homelab_ssl_cert_seconds_left <= 0
+        for: 5m
+        labels: { severity: critical }
+        annotations:
+          priority: "10"
+          summary: "TLS cert for {{ $labels.host }} has EXPIRED"
+          description: "{{ $labels.host }} is serving an expired certificate."

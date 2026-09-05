@@ -1,0 +1,27 @@
+# gitleaks config for this repo.
+# Runs at commit time via .pre-commit-config.yaml and in CI (.github/workflows/validate.yml).
+# Docs: https://github.com/gitleaks/gitleaks
+
+title = "homelab-public gitleaks"
+
+[extend]
+useDefault = true          # all of gitleaks' built-in rules
+
+[allowlist]
+description = "known-safe placeholders and generated files"
+
+paths = [
+  '''(^|/)\.env\.example$''',
+  '''(^|/).*\.env\.example$''',
+  '''(^|/).*\.sample$''',
+  '''(^|/)docs/env-inventory\.md$''',
+]
+
+# These only suppress a match when the *matched secret string itself* looks like
+# one of these — not whole files. Kept deliberately narrow.
+regexes = [
+  '''\{\{HOMEPAGE_VAR_[A-Z0-9_]+\}\}''',         # Homepage env-substitution token
+  '''\$\{[A-Za-z_][A-Za-z0-9_]*(:?-[^}]*)?\}''', # ${VAR} / ${VAR:-default}
+  '''(?i)^(your|my)[-_ ]?(api[-_ ]?)?(token|secret|key|password)[-_ ]?here$''',
+  '''(?i)^change[-_ ]?me$''',
+]

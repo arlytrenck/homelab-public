@@ -1,0 +1,53 @@
+# frontend stack — gethomepage dashboard.
+#   UI is reached at http://10.0.0.10:3000 (no reverse-proxy vhost), so it
+#   publishes on the LAN IP rather than all interfaces.
+#   Networks: `frontend` (grafana/prometheus by name) + `media_default`
+#   (emby/*arr widgets by container name — they no longer publish on the LAN IP).
+#   Widget secrets come from ./.env as HOMEPAGE_VAR_* -> {{HOMEPAGE_VAR_*}}.
+name: frontend
+
+services:
+  homepage:
+    image: ghcr.io/gethomepage/homepage:latest
+    container_name: homepage
+    networks:
+      - frontend
+      - media
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 512m
+    pids_limit: 512
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+    env_file:
+      - .env
+    environment:
+      HOMEPAGE_ALLOWED_HOSTS: 10.0.0.10:3000
+      PUID: 1000
+      # PGID is the host "docker" group so the server process can read the
+      # bind-mounted docker.sock for the docker.yaml integration.
+      PGID: 987
+    ports:
+      - "10.0.0.10:3000:3000"
+    volumes:
+      - ./homepage:/app/config
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://localhost:3000/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    labels:
+      - "autoheal=true"
+    restart: unless-stopped
+
+networks:
+  frontend:
+    external: true
+  media:
+    external: true
+    name: media_default

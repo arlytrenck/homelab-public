@@ -1,0 +1,104 @@
+# Host / node-exporter alerts for homelab-01.
+# `priority` annotation (1-10) is what the gotify bridge maps to push priority.
+groups:
+  - name: host
+    rules:
+      - alert: NodeExporterDown
+        expr: up{job="node"} == 0
+        for: 3m
+        labels: { severity: critical }
+        annotations:
+          priority: "9"
+          summary: "node-exporter is down"
+          description: "Prometheus cannot scrape node-exporter on {{ $labels.instance }} — host metrics are blind."
+
+      - alert: HostDiskAlmostFull
+        expr: |
+          100 * (1 - node_filesystem_avail_bytes{fstype!~"tmpfs|overlay|squashfs",mountpoint!~"/host.*"}
+                   / node_filesystem_size_bytes{fstype!~"tmpfs|overlay|squashfs",mountpoint!~"/host.*"}) > 90
+        for: 10m
+        labels: { severity: warning }
+        annotations:
+          priority: "5"
+          summary: "Disk {{ $labels.mountpoint }} over 90% full"
+          description: "{{ $labels.mountpoint }} on {{ $labels.instance }} is {{ $value | printf \"%.1f\" }}% full."
+
+      - alert: HostDiskCritical
+        expr: |
+          100 * (1 - node_filesystem_avail_bytes{fstype!~"tmpfs|overlay|squashfs",mountpoint!~"/host.*"}
+                   / node_filesystem_size_bytes{fstype!~"tmpfs|overlay|squashfs",mountpoint!~"/host.*"}) > 97
+        for: 5m
+        labels: { severity: critical }
+        annotations:
+          priority: "9"
+          summary: "Disk {{ $labels.mountpoint }} over 97% full"
+          description: "{{ $labels.mountpoint }} on {{ $labels.instance }} is {{ $value | printf \"%.1f\" }}% full — act now."
+
+      - alert: HostDiskWillFill
+        expr: |
+          predict_linear(node_filesystem_avail_bytes{fstype!~"tmpfs|overlay|squashfs",mountpoint!~"/host.*"}[6h], 24*3600) < 0
+          and
+          100 * (1 - node_filesystem_avail_bytes / node_filesystem_size_bytes) > 70
+        for: 1h
+        labels: { severity: warning }
+        annotations:
+          priority: "5"
+          summary: "Disk {{ $labels.mountpoint }} projected to fill within 24h"
+          description: "At the current fill rate {{ $labels.mountpoint }} on {{ $labels.instance }} runs out inside a day."
+
+      - alert: HostOutOfMemory
+        expr: node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes * 100 < 8
+        for: 10m
+        labels: { severity: warning }
+        annotations:
+          priority: "5"
+          summary: "Host memory available < 8%"
+          description: "{{ $labels.instance }} has {{ $value | printf \"%.1f\" }}% memory available."
+
+      - alert: HostSwapAlmostFull
+        expr: |
+          (node_memory_SwapTotal_bytes > 0)
+          and
+          (node_memory_SwapFree_bytes / node_memory_SwapTotal_bytes * 100 < 15)
+        for: 15m
+        labels: { severity: warning }
+        annotations:
+          priority: "4"
+          summary: "Swap over 85% used"
+          description: "{{ $labels.instance }} swap is nearly exhausted ({{ $value | printf \"%.1f\" }}% free)."
+
+      - alert: HostHighLoad
+        expr: node_load5 > 2 * count by (instance) (node_cpu_seconds_total{mode="idle"})
+        for: 15m
+        labels: { severity: warning }
+        annotations:
+          priority: "4"
+          summary: "5-minute load > 2x CPU count"
+          description: "load5 on {{ $labels.instance }} is {{ $value | printf \"%.1f\" }}."
+
+      - alert: HostClockNotSynchronising
+        expr: node_timex_sync_status == 0
+        for: 15m
+        labels: { severity: warning }
+        annotations:
+          priority: "4"
+          summary: "Clock not synchronising"
+          description: "NTP sync is not active on {{ $labels.instance }} — certs, TOTP and logs drift."
+
+      - alert: HostFilesystemReadOnly
+        expr: node_filesystem_readonly{fstype!~"tmpfs|overlay|squashfs",mountpoint!~"/host.*"} == 1
+        for: 2m
+        labels: { severity: critical }
+        annotations:
+          priority: "10"
+          summary: "Filesystem {{ $labels.mountpoint }} is read-only"
+          description: "{{ $labels.mountpoint }} on {{ $labels.instance }} remounted read-only — usually failing storage."
+
+      - alert: HostRebootRequired
+        expr: homelab_reboot_required == 1
+        for: 30m
+        labels: { severity: warning }
+        annotations:
+          priority: "3"
+          summary: "Host is pending a reboot"
+          description: "unattended-upgrades staged a kernel/libc update on {{ $labels.instance }}. Schedule a reboot."

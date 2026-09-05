@@ -1,0 +1,64 @@
+# automation stack: workflow automation (n8n).
+#
+# n8n is general workflow automation (webhooks, scheduled flows, chaining the
+# existing *arr / notification / metrics APIs together). It also owns the
+# host backup-job orchestration via an SSH node, giving cron-driven scripts
+# real run history in the n8n UI instead of a silent crontab.
+#
+# Publishes on 127.0.0.1 only — the reverse proxy + forward-auth sit in front,
+# same pattern as the other admin UIs.
+#
+# Secrets (n8n encryption key) live in ./.env (chmod 600, gitignored).
+# N8N_ENCRYPTION_KEY is generated once and MUST be preserved — losing it makes
+# existing saved credentials in n8n workflows unreadable.
+
+name: automation
+
+x-common: &common
+  security_opt:
+    - no-new-privileges:true
+  logging:
+    driver: json-file
+    options:
+      max-size: "10m"
+      max-file: "5"
+
+services:
+  n8n:
+    <<: *common
+    mem_limit: 1g
+    pids_limit: 512
+    image: n8nio/n8n:latest
+    container_name: n8n
+    restart: unless-stopped
+    environment:
+      - TZ=America/New_York
+      - GENERIC_TIMEZONE=America/New_York
+      - N8N_HOST=n8n.example.com
+      - N8N_PROTOCOL=https
+      - N8N_PORT=5678
+      - N8N_SECURE_COOKIE=true
+      - WEBHOOK_URL=https://n8n.example.com/
+      - N8N_RUNNERS_ENABLED=true
+      # Generated once, must not change — see the header note above.
+      - N8N_ENCRYPTION_KEY=${N8N_ENCRYPTION_KEY}
+    ports:
+      - "127.0.0.1:5678:5678"
+    volumes:
+      - ./n8n/data:/home/node/.n8n
+    networks:
+      - default
+      - frontend
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- --spider http://127.0.0.1:5678/healthz || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    labels:
+      - "autoheal=true"
+
+networks:
+  default:
+  frontend:
+    external: true

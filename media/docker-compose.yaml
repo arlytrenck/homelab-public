@@ -1,0 +1,352 @@
+# media stack — Emby + *arr + companions.
+#   Reverse-proxied by the host proxy (short subdomains of example.com) via
+#   localhost, so admin UIs publish on 127.0.0.1 only.
+#   Emby publishes on the LAN IP (10.0.0.10) so TV/console clients can reach it
+#   directly; tighten to 127.0.0.1 once every client uses the vhost instead.
+#   Jellystat has no reverse-proxy vhost and is meant to be reached at 10.0.0.10:3005.
+#   Secrets come from ./.env (chmod 600, git-ignored).
+#   Resource limits are ceilings (no reservations) sized ~3-4x observed use on a
+#   16-core / 54 GB host — tune in this file, then `up -d`.
+name: media
+
+x-common: &common
+  security_opt:
+    - no-new-privileges:true
+  logging:
+    driver: json-file
+    options:
+      max-size: "10m"
+      max-file: "5"
+
+services:
+  emby:
+    <<: *common
+    image: emby/embyserver:latest
+    container_name: embyserver
+    mem_limit: 8g
+    pids_limit: 4096
+    environment:
+      - UID=1000
+      - GID=1000
+      - TZ=America/New_York
+    volumes:
+      - ./emby:/config:rw
+      - /mnt/nas/media:/media:ro
+      - ./emby-backups:/mnt/nas/homelab/emby-backups:rw
+    ports:
+      # loopback for the reverse-proxy vhost; LAN IP so TV / console clients
+      # can connect directly.
+      - "127.0.0.1:8096:8096"
+      - "10.0.0.10:8096:8096"
+      - "127.0.0.1:8920:8920"
+      - "10.0.0.10:8920:8920"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:8096/System/Info/Public || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 90s
+    restart: unless-stopped
+
+  tinymediamanager:
+    <<: *common
+    image: tinymediamanager/tinymediamanager:latest
+    container_name: tinymediamanager
+    labels:
+      - "autoheal=true"
+    mem_limit: 4g
+    pids_limit: 2048
+    cpus: 6
+    environment:
+      - USER_ID=1000
+      - GROUP_ID=1000
+      - ALLOW_DIRECT_VNC=true
+      - LC_ALL=en_US.UTF-8
+      - LANG=en_US.UTF-8
+      - PASSWORD=${TMM_VNC_PASSWORD}
+      - TZ=America/New_York
+    volumes:
+      - ./tmm:/data:rw
+      - /mnt/nas/media:/media:rw
+    ports:
+      - "127.0.0.1:5900:5900"
+      - "127.0.0.1:4000:4000"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:4000/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 120s
+    restart: unless-stopped
+
+  seerr:
+    <<: *common
+    image: ghcr.io/seerr-team/seerr:latest
+    container_name: seerr
+    labels:
+      - "autoheal=true"
+    user: "1000:1000"
+    mem_limit: 1g
+    pids_limit: 512
+    environment:
+      - LOG_LEVEL=info
+      - TZ=America/New_York
+    volumes:
+      - ./seerr:/app/config:rw
+    ports:
+      - "127.0.0.1:5055:5055"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:5055/api/v1/status || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    restart: unless-stopped
+
+  tdarr:
+    <<: *common
+    container_name: tdarr
+    image: ghcr.io/haveagitgat/tdarr:latest
+    restart: unless-stopped
+    labels:
+      - "autoheal=true"
+    # NOTE: no `init:` — tdarr's image uses s6-overlay which must be PID 1.
+    mem_limit: 8g
+    pids_limit: 8192
+    cpus: 6          # hard ceiling — bound the transcode backlog's CPU load
+    ports:
+      - "127.0.0.1:8265:8265"   # Web UI
+      - "127.0.0.1:8266:8266"   # node/server port (internal node only)
+    environment:
+      - TZ=America/New_York
+      - PUID=1000
+      - PGID=1000
+      - serverIP=0.0.0.0
+      - serverPort=8266
+      - webUIPort=8265
+      - internalNode=true
+      - inContainer=true
+      - nodeName=ApolloNode
+    volumes:
+      - ./tdarr/server:/app/server
+      - ./tdarr/configs:/app/configs
+      - ./tdarr/logs:/app/logs
+      - /mnt/nas/media:/media:rw
+      - ./tdarr/transcodes:/transcodes:rw   # local scratch disk, not NAS — keeps transcode I/O off the network mount
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS -o /dev/null http://127.0.0.1:8265/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  komga:
+    <<: *common
+    image: gotson/komga
+    container_name: komga
+    init: true
+    labels:
+      - "autoheal=true"
+    mem_limit: 2g
+    pids_limit: 1024
+    volumes:
+      - type: bind
+        source: ./komga/config
+        target: /config
+      - type: bind
+        source: /mnt/nas/media/comics
+        target: /data
+    ports:
+      - "127.0.0.1:25600:25600"
+    user: "1000:1000"
+    environment:
+      - TZ=America/New_York
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS -o /dev/null http://127.0.0.1:25600/actuator/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 120s
+    restart: unless-stopped
+
+  sonarr:
+    <<: *common
+    image: lscr.io/linuxserver/sonarr:latest
+    container_name: sonarr
+    labels:
+      - "autoheal=true"
+    mem_limit: 1g
+    pids_limit: 512
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/New_York
+    volumes:
+      - ./sonarr:/config
+      - /mnt/nas/media/tv-shows:/tv
+    ports:
+      - "127.0.0.1:8989:8989"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS -o /dev/null http://127.0.0.1:8989/ping || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 45s
+    restart: unless-stopped
+
+  radarr:
+    <<: *common
+    image: lscr.io/linuxserver/radarr:latest
+    container_name: radarr
+    labels:
+      - "autoheal=true"
+    mem_limit: 1g
+    pids_limit: 512
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/New_York
+    volumes:
+      - ./radarr:/config
+      - /mnt/nas/media/movies:/movies
+    ports:
+      - "127.0.0.1:7878:7878"    # rdr.example.com (reverse proxy + forward-auth) is the LAN entrypoint
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS -o /dev/null http://127.0.0.1:7878/ping || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 45s
+    restart: unless-stopped
+
+  prowlarr:
+    <<: *common
+    image: lscr.io/linuxserver/prowlarr:latest
+    container_name: prowlarr
+    labels:
+      - "autoheal=true"
+    mem_limit: 1g
+    pids_limit: 512
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/New_York
+    volumes:
+      - ./prowlarr:/config
+    ports:
+      - "127.0.0.1:9696:9696"    # prl.example.com (reverse proxy + forward-auth) is the LAN entrypoint
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS -o /dev/null http://127.0.0.1:9696/ping || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 45s
+    restart: unless-stopped
+
+  flaresolverr:
+    <<: *common
+    image: ghcr.io/flaresolverr/flaresolverr:latest
+    container_name: flaresolverr
+    labels:
+      - "autoheal=true"
+    mem_limit: 1g
+    pids_limit: 512
+    environment:
+      - TZ=America/New_York
+      - LOG_LEVEL=info
+    # no published port — Prowlarr reaches it at http://flaresolverr:8191
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS -o /dev/null http://127.0.0.1:8191/health || exit 1"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    restart: unless-stopped
+
+  bazarr:
+    <<: *common
+    image: lscr.io/linuxserver/bazarr:latest
+    container_name: bazarr
+    labels:
+      - "autoheal=true"
+    mem_limit: 1g
+    pids_limit: 512
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/New_York
+    volumes:
+      - ./bazarr:/config
+      - /mnt/nas/media/tv-shows:/tv
+      - /mnt/nas/media/movies:/movies
+    ports:
+      - "127.0.0.1:6767:6767"    # bzr.example.com (reverse proxy + forward-auth) is the LAN entrypoint
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS -o /dev/null http://127.0.0.1:6767/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    restart: unless-stopped
+
+  jellystat-db:
+    <<: *common
+    image: postgres:16-alpine
+    container_name: jellystat-db
+    mem_limit: 1g
+    pids_limit: 512
+    shm_size: 256mb
+    stop_grace_period: 60s
+    environment:
+      - POSTGRES_USER=jellystat
+      - POSTGRES_PASSWORD=${JELLYSTAT_DB_PASSWORD}
+      - POSTGRES_DB=jfstat
+      - TZ=America/New_York
+    volumes:
+      - jellystat_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U jellystat -d jfstat"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    restart: unless-stopped
+    labels:
+      - "com.centurylinklabs.watchtower.enable=false"   # pin: Jellystat<->Emby is unsupported, update deliberately
+
+  jellystat:
+    <<: *common
+    image: cyfershepard/jellystat:1.1.11
+    container_name: jellystat
+    mem_limit: 512m
+    pids_limit: 512
+    depends_on:
+      jellystat-db:
+        condition: service_healthy
+    environment:
+      - POSTGRES_USER=jellystat
+      - POSTGRES_PASSWORD=${JELLYSTAT_DB_PASSWORD}
+      - POSTGRES_IP=jellystat-db
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=jfstat
+      - JWT_SECRET=${JELLYSTAT_JWT_SECRET}
+      - IS_EMBY_API=true          # use Jellystat native Emby API mode (X-MediaBrowser-Token, /emby prefix)
+      - TZ=America/New_York
+    ports:
+      - "10.0.0.10:3005:3000"   # LAN-only UI, no reverse-proxy vhost
+    volumes:
+      - jellystat_backup:/app/backend/backup-data
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:3000/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 45s
+    restart: unless-stopped
+    labels:
+      - "com.centurylinklabs.watchtower.enable=false"
+      - "autoheal=true"
+
+volumes:
+  jellystat_pgdata:
+  jellystat_backup:

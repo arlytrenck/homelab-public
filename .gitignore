@@ -1,0 +1,25 @@
+# Real secrets never get committed — only *.env.example (placeholders).
+.env
+*.env
+!*.env.example
+!*.env.example.extra
+!*.env.sample
+
+# Real credential material for the identity stack.
+identity/authelia/config/
+
+# The alertmanager SMTP password file (referenced by path, not by value).
+monitoring/alertmanager/smtp_password
+
+# Application state / data directories — this repo is the compose layer,
+# not a backup of live service data.
+**/data/
+**/postgres/
+**/library/
+gotify_data/
+alertmanager_data/
+
+# os / editor
+.DS_Store
+*.swp
+*~

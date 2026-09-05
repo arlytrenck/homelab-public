@@ -1,0 +1,45 @@
+# Alertmanager — fans every alert out to BOTH the gotify bridge and email.
+# Prometheus rules set a `priority` annotation (1-10) which the bridge maps to
+# the Gotify message priority. `severity` label drives grouping + inhibition.
+#
+# SMTP auth password is read from a file (gitignored, chmod 600):
+#   ./smtp_password  ->  /etc/alertmanager/smtp_password
+# If that file is empty, email silently fails but gotify still works.
+
+global:
+  resolve_timeout: 5m
+  smtp_smarthost: 'smtp.example.com:587'
+  smtp_from: 'alerts@example.com'
+  smtp_auth_username: 'alerts@example.com'
+  smtp_auth_password_file: '/etc/alertmanager/smtp_password'
+  smtp_require_tls: true
+
+route:
+  receiver: gotify-and-email
+  group_by: ['alertname', 'severity']
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 4h
+  routes:
+    # critical: page sooner and repeat more often
+    - matchers:
+        - severity = "critical"
+      group_wait: 10s
+      repeat_interval: 1h
+
+inhibit_rules:
+  # a warning for the same alertname+instance is noise while a critical fires
+  - source_matchers: [ severity = "critical" ]
+    target_matchers: [ severity = "warning" ]
+    equal: ['alertname', 'instance']
+
+receivers:
+  - name: gotify-and-email
+    webhook_configs:
+      - url: http://alertmanager-gotify:8080/gotify_webhook
+        send_resolved: true
+    email_configs:
+      - to: 'alerts@example.com'
+        send_resolved: true
+        headers:
+          Subject: '[homelab {{ .Status | toUpper }}{{ if eq .Status "firing" }}:{{ .Alerts.Firing | len }}{{ end }}] {{ .CommonLabels.alertname }}'

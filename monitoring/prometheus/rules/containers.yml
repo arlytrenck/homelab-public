@@ -1,0 +1,51 @@
+# Container alerts (cadvisor). `name` is the docker container name.
+# The `critical set` is the containers whose absence is page-worthy; everything
+# else is caught by ContainerRestartLoop / ContainerHighMemory only.
+groups:
+  - name: containers
+    rules:
+      - alert: ContainerDown
+        expr: |
+          time() - max by (name) (
+            container_last_seen{name=~"authelia|embyserver|immich_server|immich_postgres|immich_redis|vaultwarden|prometheus|grafana|gotify|alertmanager|uptime-kuma|jellystat-db"}
+          ) > 300
+        for: 2m
+        labels: { severity: critical }
+        annotations:
+          priority: "8"
+          summary: "Container {{ $labels.name }} has disappeared"
+          description: "cadvisor has not seen {{ $labels.name }} for over 5 minutes — it is stopped or crash-looping."
+
+      - alert: ContainerRestartLoop
+        expr: changes(container_start_time_seconds{name!=""}[15m]) > 3
+        for: 0m
+        labels: { severity: warning }
+        annotations:
+          priority: "6"
+          summary: "Container {{ $labels.name }} is restart-looping"
+          description: "{{ $labels.name }} restarted {{ $value }} times in 15 minutes (check for an autoheal fight or a bad image)."
+
+      - alert: ContainerHighMemory
+        expr: |
+          container_spec_memory_limit_bytes{name!=""} > 0
+          and
+          container_memory_working_set_bytes{name!=""} / container_spec_memory_limit_bytes{name!=""} > 0.95
+        for: 10m
+        labels: { severity: warning }
+        annotations:
+          priority: "5"
+          summary: "Container {{ $labels.name }} near its memory limit"
+          description: "{{ $labels.name }} is at {{ $value | printf \"%.0f%%\" }} of its mem_limit — an OOM-kill is imminent."
+
+      # tdarr and tinymediamanager carry a deliberate `cpus:` cap — throttling
+      # there is the cap doing its job during a job, not a fault. Excluded.
+      - alert: ContainerCPUThrottledHard
+        expr: |
+          rate(container_cpu_cfs_throttled_periods_total{name!="",name!~"tdarr|tinymediamanager"}[15m])
+          / clamp_min(rate(container_cpu_cfs_periods_total{name!="",name!~"tdarr|tinymediamanager"}[15m]), 1) > 0.75
+        for: 30m
+        labels: { severity: warning }
+        annotations:
+          priority: "3"
+          summary: "Container {{ $labels.name }} heavily CPU-throttled"
+          description: "{{ $labels.name }} is throttled on >75% of CFS periods for 30m — it may need a higher cpu allowance."
