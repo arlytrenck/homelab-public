@@ -6,6 +6,17 @@ Notable changes to this repo. No version tags — entries grouped by date
 
 ## [Unreleased]
 
+### Changed
+- **`analytics/`** — Umami went from a LAN-only trial to a real public
+  deployment: a dedicated reverse-proxy vhost now exposes the tracking
+  script + collect endpoint (and Umami's own login-gated dashboard) to the
+  internet, deliberately with no LAN-guard or SSO in front since anonymous
+  visitors' browsers need to reach the tracking script. Added
+  `TWO_FACTOR_ENCRYPTION_KEY` (same format requirement as `APP_SECRET` — a
+  64-char hex string, not base64) now that 2FA on the admin account
+  actually matters with the login internet-facing. `.env.example` +
+  `docs/env-inventory.md` regenerated to match.
+
 ### Added
 - **`networking/`** — AdGuard Home: LAN DNS resolver with per-domain
   rewrites (the pattern you need if a service has a public DNS record but

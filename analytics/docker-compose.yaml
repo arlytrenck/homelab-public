@@ -1,11 +1,13 @@
 # analytics stack: Umami (self-hosted, privacy-friendly website analytics).
 #
-# Trial deployment for example.com — bound to 127.0.0.1 + LAN only for now,
-# no reverse-proxy vhost yet (staged separately once the tracking script is
-# actually wired into the live site). Postgres-backed per upstream's own
-# image variant.
+# Publicly deployed for example.com — a dedicated reverse-proxy vhost exposes
+# just the tracking script + collect endpoint (and Umami's own login-gated
+# dashboard) to the internet; no LAN-guard or SSO in front, since the
+# tracking script has to be reachable by anonymous visitors. Postgres-backed
+# per upstream's own image variant.
 #
-# Secrets (DB password, app secret) live in ./.env (chmod 600, gitignored).
+# Secrets (DB password, app secret, 2FA encryption key) live in ./.env
+# (chmod 600, gitignored).
 name: analytics
 
 x-common: &common
@@ -51,6 +53,7 @@ services:
     environment:
       - DATABASE_URL=postgresql://umami:${UMAMI_DB_PASS:?required}@umami-db:5432/umami
       - APP_SECRET=${UMAMI_APP_SECRET:?required}
+      - TWO_FACTOR_ENCRYPTION_KEY=${UMAMI_TWO_FACTOR_ENCRYPTION_KEY:?required}
     ports:
       - "127.0.0.1:3006:3000"
       - "10.0.0.10:3006:3000"
