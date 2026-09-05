@@ -1,0 +1,131 @@
+{
+  "id": "kET9FyPmlMhTslvl",
+  "name": "Homelab nightly backup orchestration",
+  "active": false,
+  "activeVersionId": null,
+  "createdAt": "2026-09-05T13:28:49.954Z",
+  "updatedAt": "2026-09-05T13:33:42.760Z",
+  "isArchived": false,
+  "versionId": "0fb01078-a96e-4206-baef-2e0b341199f9",
+  "triggerCount": 0,
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 1 * * *"
+            }
+          ]
+        }
+      },
+      "id": "0fbe97f0-1b87-4c93-86cf-f7bcca0ab641",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "privateKey",
+        "command": "sudo /opt/homelab/scripts/backup_docker.sh"
+      },
+      "id": "026dae08-7ebb-4235-8ed7-0969e79fe76e",
+      "name": "backup_docker.sh",
+      "type": "n8n-nodes-base.ssh",
+      "typeVersion": 1,
+      "position": [
+        272,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "privateKey",
+        "command": "sudo /opt/homelab/scripts/sync_folders.sh"
+      },
+      "id": "f1bd1580-d6ac-4efc-bb38-31a13529f7ac",
+      "name": "sync_folders.sh",
+      "type": "n8n-nodes-base.ssh",
+      "typeVersion": 1,
+      "position": [
+        528,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "privateKey",
+        "command": "sudo /opt/homelab/toolkit/run-snapshots.sh"
+      },
+      "id": "de52ceee-8ea8-4d2f-bb3f-906d014f7178",
+      "name": "run-snapshots.sh",
+      "type": "n8n-nodes-base.ssh",
+      "typeVersion": 1,
+      "position": [
+        784,
+        0
+      ]
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "backup_docker.sh",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "backup_docker.sh": {
+      "main": [
+        [
+          {
+            "node": "sync_folders.sh",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "sync_folders.sh": {
+      "main": [
+        [
+          {
+            "node": "run-snapshots.sh",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "nodeGroups": [],
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "tags": [],
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "kET9FyPmlMhTslvl",
+      "projectId": "6bAks2n4cMYg55VL",
+      "createdAt": "2026-09-05T13:28:49.960Z",
+      "updatedAt": "2026-09-05T13:28:49.960Z"
+    }
+  ],
+  "activeVersion": null
+}

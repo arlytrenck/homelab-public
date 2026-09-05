@@ -1,0 +1,81 @@
+{
+  "id": "Fhh3XEcv6sH27L1w",
+  "name": "Homelab GitHub CI watch",
+  "active": false,
+  "activeVersionId": null,
+  "createdAt": "2026-09-05T14:22:55.215Z",
+  "updatedAt": "2026-09-05T14:23:04.506Z",
+  "isArchived": false,
+  "versionId": "adea6dce-2a28-4d91-9967-8a501de2a045",
+  "triggerCount": 0,
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 7 * * *"
+            }
+          ]
+        }
+      },
+      "id": "f40752be-3dcc-4a99-ac92-a4578cef2373",
+      "name": "Daily 07:00",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -400,
+        -144
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "privateKey",
+        "command": "/opt/homelab/toolkit/github-ci-watch.sh"
+      },
+      "id": "0711ed78-3266-4c54-9501-ee42239c58ad",
+      "name": "github-ci-watch.sh",
+      "type": "n8n-nodes-base.ssh",
+      "typeVersion": 1,
+      "position": [
+        -144,
+        -144
+      ]
+    }
+  ],
+  "connections": {
+    "Daily 07:00": {
+      "main": [
+        [
+          {
+            "node": "github-ci-watch.sh",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "nodeGroups": [],
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "tags": [],
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "Fhh3XEcv6sH27L1w",
+      "projectId": "6bAks2n4cMYg55VL",
+      "createdAt": "2026-09-05T14:22:55.235Z",
+      "updatedAt": "2026-09-05T14:22:55.235Z"
+    }
+  ],
+  "activeVersion": null
+}

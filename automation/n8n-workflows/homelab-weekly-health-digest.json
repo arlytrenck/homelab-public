@@ -1,0 +1,81 @@
+{
+  "id": "DKlWadKBcAFETj8F",
+  "name": "Homelab weekly health digest",
+  "active": false,
+  "activeVersionId": null,
+  "createdAt": "2026-09-05T14:10:30.981Z",
+  "updatedAt": "2026-09-05T14:10:40.489Z",
+  "isArchived": false,
+  "versionId": "b28796ce-b481-4024-9007-4eacfffeec8a",
+  "triggerCount": 0,
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 9 * * 0"
+            }
+          ]
+        }
+      },
+      "id": "0a7ff95e-3c7b-4e34-83ad-09193bba1745",
+      "name": "Sunday 09:00",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -400,
+        -144
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "privateKey",
+        "command": "/opt/homelab/toolkit/weekly-health-digest.sh"
+      },
+      "id": "1ae43f2f-02cc-4d80-8fe0-68b9d3faa8f5",
+      "name": "weekly-health-digest.sh",
+      "type": "n8n-nodes-base.ssh",
+      "typeVersion": 1,
+      "position": [
+        -144,
+        -144
+      ]
+    }
+  ],
+  "connections": {
+    "Sunday 09:00": {
+      "main": [
+        [
+          {
+            "node": "weekly-health-digest.sh",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "nodeGroups": [],
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "tags": [],
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "DKlWadKBcAFETj8F",
+      "projectId": "6bAks2n4cMYg55VL",
+      "createdAt": "2026-09-05T14:10:30.990Z",
+      "updatedAt": "2026-09-05T14:10:30.990Z"
+    }
+  ],
+  "activeVersion": null
+}

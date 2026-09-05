@@ -109,6 +109,12 @@ scripts write to).
   validation, and `.env.example` drift — on every push. The same three run
   locally via `pre-commit` (`.pre-commit-config.yaml`), plus a hard block on
   ever staging a real `.env` file.
+- **`tools/notify.sh`**, **`tools/push-github-repos.sh`**,
+  **`tools/weekly-health-digest.sh`**, **`tools/github-ci-watch.sh`**,
+  **`tools/seerr-pending-reminder.sh`**, **`tools/export-n8n-workflows.sh`** —
+  the scripts behind the n8n workflows in `automation/n8n-workflows/`. Each
+  one also runs standalone from a terminal or cron; n8n is just one caller.
+  See [`docs/n8n-automation.md`](docs/n8n-automation.md).
 
 ## Common operations
 
@@ -145,6 +151,9 @@ docker compose -f <stack>/docker-compose.yaml logs -f <service>
   a clustering feature that made things worse), so you can skip them.
 - [`docs/env-inventory.md`](docs/env-inventory.md) — every environment
   variable referenced across every stack, auto-generated.
+- [`docs/n8n-automation.md`](docs/n8n-automation.md) — using n8n to replace
+  cron for scheduled maintenance scripts, with real per-run history;
+  sanitized example workflows in `automation/n8n-workflows/`.
 
 ## What's not here
 

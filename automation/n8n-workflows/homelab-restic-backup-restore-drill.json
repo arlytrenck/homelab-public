@@ -1,0 +1,151 @@
+{
+  "id": "vA4XfeaIKdFBMX8c",
+  "name": "Homelab restic backup + restore drill",
+  "active": false,
+  "activeVersionId": null,
+  "createdAt": "2026-09-05T13:35:48.983Z",
+  "updatedAt": "2026-09-05T13:36:35.735Z",
+  "isArchived": false,
+  "versionId": "b061eead-a2ab-41b7-98c0-caed657ff2cb",
+  "triggerCount": 0,
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "10 4 * * *"
+            }
+          ]
+        }
+      },
+      "id": "ae247452-1471-4d5f-83af-c5641b44bd5d",
+      "name": "Daily 04:10",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "privateKey",
+        "command": "sudo /opt/homelab/toolkit/restic-backup.sh --notify"
+      },
+      "id": "eefe36f8-76af-4535-aed2-4380b46d77e5",
+      "name": "restic-backup.sh",
+      "type": "n8n-nodes-base.ssh",
+      "typeVersion": 1,
+      "position": [
+        272,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 5 1 * *"
+            }
+          ]
+        }
+      },
+      "id": "b2bf299b-87e8-41f5-9929-8294b6340b33",
+      "name": "1st of month 05:00",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        224
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "privateKey",
+        "command": "sudo /opt/homelab/toolkit/restic-backup.sh --weekly --notify"
+      },
+      "id": "5f234b66-1ac1-4a47-845c-40d4096f8766",
+      "name": "restic-backup.sh --weekly",
+      "type": "n8n-nodes-base.ssh",
+      "typeVersion": 1,
+      "position": [
+        272,
+        224
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "privateKey",
+        "command": "sudo /opt/homelab/toolkit/restore-drill.sh --deep"
+      },
+      "id": "85a0abd9-0684-43f7-837c-9c702d1a3106",
+      "name": "restore-drill.sh --deep",
+      "type": "n8n-nodes-base.ssh",
+      "typeVersion": 1,
+      "position": [
+        528,
+        224
+      ]
+    }
+  ],
+  "connections": {
+    "Daily 04:10": {
+      "main": [
+        [
+          {
+            "node": "restic-backup.sh",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "1st of month 05:00": {
+      "main": [
+        [
+          {
+            "node": "restic-backup.sh --weekly",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "restic-backup.sh --weekly": {
+      "main": [
+        [
+          {
+            "node": "restore-drill.sh --deep",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "nodeGroups": [],
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "tags": [],
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "vA4XfeaIKdFBMX8c",
+      "projectId": "6bAks2n4cMYg55VL",
+      "createdAt": "2026-09-05T13:35:48.991Z",
+      "updatedAt": "2026-09-05T13:35:48.991Z"
+    }
+  ],
+  "activeVersion": null
+}

@@ -1,0 +1,81 @@
+{
+  "id": "ZtdVLFKJEmjMK947",
+  "name": "Homelab Seerr pending reminder",
+  "active": false,
+  "activeVersionId": null,
+  "createdAt": "2026-09-05T14:24:10.792Z",
+  "updatedAt": "2026-09-05T14:24:20.006Z",
+  "isArchived": false,
+  "versionId": "d69f118d-d28c-4c3b-ac81-7d53538c4219",
+  "triggerCount": 0,
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 9 * * 1,4"
+            }
+          ]
+        }
+      },
+      "id": "de78427e-6b64-4a7e-8729-7e51a5888b61",
+      "name": "Mon+Thu 09:00",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -400,
+        -144
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "privateKey",
+        "command": "/opt/homelab/toolkit/seerr-pending-reminder.sh"
+      },
+      "id": "c8d7db7c-5c35-4871-ac1f-81de371f6d53",
+      "name": "seerr-pending-reminder.sh",
+      "type": "n8n-nodes-base.ssh",
+      "typeVersion": 1,
+      "position": [
+        -144,
+        -144
+      ]
+    }
+  ],
+  "connections": {
+    "Mon+Thu 09:00": {
+      "main": [
+        [
+          {
+            "node": "seerr-pending-reminder.sh",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "nodeGroups": [],
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "tags": [],
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "ZtdVLFKJEmjMK947",
+      "projectId": "6bAks2n4cMYg55VL",
+      "createdAt": "2026-09-05T14:24:10.802Z",
+      "updatedAt": "2026-09-05T14:24:10.802Z"
+    }
+  ],
+  "activeVersion": null
+}

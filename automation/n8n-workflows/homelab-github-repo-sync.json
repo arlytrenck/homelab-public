@@ -1,0 +1,81 @@
+{
+  "id": "KhJsz87UOY7OOi9Z",
+  "name": "Homelab GitHub repo sync",
+  "active": false,
+  "activeVersionId": null,
+  "createdAt": "2026-09-05T14:08:59.197Z",
+  "updatedAt": "2026-09-05T14:09:09.076Z",
+  "isArchived": false,
+  "versionId": "7468ff21-e255-4b6a-8355-018336a2afc1",
+  "triggerCount": 0,
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "45 0 * * *"
+            }
+          ]
+        }
+      },
+      "id": "91d2a38e-283d-486a-ac69-65de88862957",
+      "name": "Daily 00:45",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -400,
+        -144
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "privateKey",
+        "command": "/opt/homelab/toolkit/push-github-repos.sh"
+      },
+      "id": "8a4d1531-a37f-42d8-8ae1-fb93afc3cba5",
+      "name": "push-github-repos.sh",
+      "type": "n8n-nodes-base.ssh",
+      "typeVersion": 1,
+      "position": [
+        -144,
+        -144
+      ]
+    }
+  ],
+  "connections": {
+    "Daily 00:45": {
+      "main": [
+        [
+          {
+            "node": "push-github-repos.sh",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "nodeGroups": [],
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "tags": [],
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "KhJsz87UOY7OOi9Z",
+      "projectId": "6bAks2n4cMYg55VL",
+      "createdAt": "2026-09-05T14:08:59.201Z",
+      "updatedAt": "2026-09-05T14:08:59.201Z"
+    }
+  ],
+  "activeVersion": null
+}
