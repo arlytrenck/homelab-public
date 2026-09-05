@@ -87,7 +87,10 @@ listening somewhere it shouldn't have.
 ## Where to actually learn each piece
 
 This repo shows *how the pieces fit together*, not how each tool works on
-its own. Each project's own docs do that better than a README ever could:
+its own. Each project's own docs — and a few community references that are
+better than any single README — do that better:
+
+**Foundations**
 
 - [Docker Compose](https://docs.docker.com/compose/) — the file format and
   CLI everything here is written in.
@@ -95,9 +98,51 @@ its own. Each project's own docs do that better than a README ever could:
   with automatic HTTPS, if you don't already have a preference.
 - [Authelia](https://www.authelia.com/overview/prologue/introduction/) — the
   forward-auth pattern `identity/` demonstrates.
+- [LinuxServer.io docs](https://docs.linuxserver.io/) — several images here
+  (`sonarr`, `radarr`, `prowlarr`, `bazarr`) are LinuxServer builds; their
+  docs explain the shared `PUID`/`PGID`/`TZ` convention once instead of
+  repeating it per app.
+
+**Media stack**
+
+- [TRaSH Guides](https://trash-guides.info/) — the de facto standard
+  reference for wiring Sonarr/Radarr/Prowlarr/Bazarr together correctly
+  (quality profiles, naming, hardlinks) — more thorough than anything in
+  this repo, which only covers the Compose layer, not app-level config.
+- [Emby support](https://emby.media/support.html) /
+  [Immich docs](https://docs.immich.app/) — for the two services this repo
+  keeps closest to their upstream defaults.
+
+**Monitoring & alerting**
+
 - [Prometheus](https://prometheus.io/docs/introduction/overview/) +
   [Alertmanager](https://prometheus.io/docs/alerting/latest/overview/) —
   the metrics and alerting model behind `monitoring/`.
+- [Awesome Prometheus alerts](https://samber.github.io/awesome-prometheus-alerts/)
+  — a much larger catalog of alert-rule examples than the handful in
+  `monitoring/prometheus/rules/` here; a good next stop once you understand
+  why these specific ones exist.
+- [Grafana dashboards](https://grafana.com/grafana/dashboards/) — community
+  dashboards for node-exporter/cAdvisor, so you're not building panels from
+  scratch.
+
+**Backup, updates, and remote access**
+
+- [restic docs](https://restic.readthedocs.io/) — the backup tool this
+  setup's (not-included) backup scripts build on; start with its own
+  "design" page to understand why it dedupes/encrypts the way it does.
+- [Watchtower docs](https://containrrr.dev/watchtower/) — the update-checker
+  used in monitor-only mode here; its own docs cover the auto-update modes
+  this repo deliberately doesn't use.
+- [Tailscale docs](https://tailscale.com/kb/) — a mesh VPN is the easiest
+  way to reach LAN-only admin UIs (Uptime Kuma, homepage) from outside your
+  network without exposing them publicly.
+
+**Community**
+
+- [Awesome-Selfhosted](https://awesome-selfhosted.net/) — a curated list of
+  self-hostable software by category, useful for "what's the standard tool
+  for X" before you commit to one.
 - [r/selfhosted](https://www.reddit.com/r/selfhosted/) and
   [r/homelab](https://www.reddit.com/r/homelab/) — for "has anyone else hit
   this" before you assume a problem is unique to your setup.
