@@ -12,6 +12,14 @@ with placeholders (`example.com`, `10.0.0.10`, `alerts@example.com`, …).
 Everything else — the compose structure, the hardening conventions, the
 alerting pipeline, the actual Prometheus rules — is real.
 
+**If you're building your own homelab**, start at
+[`docs/getting-started.md`](docs/getting-started.md) rather than copying
+these compose files directly — it covers what this repo assumes you already
+have, a saner order to bring services up in than all-at-once, and how to
+swap the placeholders for your own values. Then
+[`docs/lessons-learned.md`](docs/lessons-learned.md) is every real mistake
+that shaped the conventions here, so you can skip repeating them.
+
 ## Layout
 
 | Stack | Compose | Services |
@@ -124,11 +132,17 @@ docker compose -f <stack>/docker-compose.yaml logs -f <service>
 
 ## Further reading
 
+- [`docs/getting-started.md`](docs/getting-started.md) — building your own?
+  Start here: prerequisites this repo assumes, a saner bring-up order than
+  all 7 stacks at once, and how to swap in your own domain/IPs.
 - [`docs/architecture.md`](docs/architecture.md) — network topology, boot
   order, and how the pieces fit together.
 - [`docs/hardening-conventions.md`](docs/hardening-conventions.md) — the
   reasoning behind the `x-common` anchor, resource-limit sizing, and the
   watchtower/autoheal split.
+- [`docs/lessons-learned.md`](docs/lessons-learned.md) — real mistakes this
+  setup made and fixed (an exposed VNC port, NAS-mounted scratch disk,
+  a clustering feature that made things worse), so you can skip them.
 - [`docs/env-inventory.md`](docs/env-inventory.md) — every environment
   variable referenced across every stack, auto-generated.
 
