@@ -18,6 +18,12 @@ Notable changes to this repo. No version tags — entries grouped by date
   `docs/env-inventory.md` regenerated to match.
 
 ### Added
+- **`monitoring/`** — UPS visibility via NUT: a `nut-exporter` container
+  scrapes `upsd` on whichever host owns the UPS USB link, a `nut`
+  Prometheus job ingests it, and `prometheus/rules/ups.yml` alerts on
+  on-battery / low-battery / forced-shutdown / low-runtime / exporter-down.
+  New `docs/lessons-learned.md` entry on why shutdown is usually the OS's
+  job, not a per-VM NUT client.
 - **`networking/`** — AdGuard Home: LAN DNS resolver with per-domain
   rewrites (the pattern you need if a service has a public DNS record but
   fails to resolve from inside your own LAN — the router usually can't

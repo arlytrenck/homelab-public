@@ -1,0 +1,85 @@
+# UPS / NUT alerts. Metrics from nut-exporter (job "nut").
+# `priority` annotation (1-10) is what the gotify bridge maps to push priority.
+groups:
+  - name: ups
+    rules:
+      - alert: UPSExporterDown
+        expr: up{job="nut"} == 0
+        for: 5m
+        labels: { severity: warning }
+        annotations:
+          priority: "6"
+          summary: "nut-exporter is down"
+          description: "Prometheus cannot scrape the NUT exporter — UPS state is blind. Check nut-exporter and upsd on the UPS host."
+
+      - alert: UPSOnline
+        expr: absent(network_ups_tools_ups_status{flag="OL"} == 1) and (count(up{job="nut"} == 1) > 0)
+        for: 5m
+        labels: { severity: warning }
+        annotations:
+          priority: "6"
+          summary: "UPS not reporting OL (online)"
+          description: "The exporter is up but no OL flag is set — the UPS is on battery, or the driver lost the device."
+
+      - alert: UPSOnBattery
+        expr: network_ups_tools_ups_status{flag="OB"} == 1
+        for: 20s
+        labels: { severity: warning }
+        annotations:
+          priority: "8"
+          summary: "UPS on battery — mains power lost"
+          description: "{{ $labels.ups }} switched to battery power; runtime is now dropping."
+
+      - alert: UPSLowBattery
+        expr: network_ups_tools_ups_status{flag="LB"} == 1
+        for: 0s
+        labels: { severity: critical }
+        annotations:
+          priority: "10"
+          summary: "UPS low battery — shutdown imminent"
+          description: "{{ $labels.ups }} signalled LB. NUT will force a graceful shutdown now."
+
+      - alert: UPSForcedShutdown
+        expr: network_ups_tools_ups_status{flag="FSD"} == 1
+        for: 0s
+        labels: { severity: critical }
+        annotations:
+          priority: "10"
+          summary: "UPS forced-shutdown flag set"
+          description: "FSD is set for {{ $labels.ups }} — coordinated shutdown in progress."
+
+      - alert: UPSBatteryChargeLow
+        expr: network_ups_tools_battery_charge < 50
+        for: 2m
+        labels: { severity: warning }
+        annotations:
+          priority: "6"
+          summary: "UPS battery charge below 50%"
+          description: "{{ $labels.ups }} battery at {{ $value | printf \"%.0f\" }}% — no headroom for a second outage."
+
+      - alert: UPSRuntimeLow
+        expr: network_ups_tools_battery_runtime < 600
+        for: 1m
+        labels: { severity: critical }
+        annotations:
+          priority: "9"
+          summary: "UPS runtime under 10 minutes"
+          description: "{{ $labels.ups }} estimates {{ $value | printf \"%.0f\" }}s of runtime left."
+
+      - alert: UPSReplaceBattery
+        expr: network_ups_tools_ups_status{flag="RB"} == 1
+        for: 5m
+        labels: { severity: warning }
+        annotations:
+          priority: "7"
+          summary: "UPS reports replace-battery"
+          description: "{{ $labels.ups }} self-test says the battery needs replacing."
+
+      - alert: UPSOverload
+        expr: network_ups_tools_ups_load > 90
+        for: 5m
+        labels: { severity: warning }
+        annotations:
+          priority: "6"
+          summary: "UPS load over 90%"
+          description: "{{ $labels.ups }} load at {{ $value | printf \"%.0f\" }}% — runtime on battery would be very short; shed load."

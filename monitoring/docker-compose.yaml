@@ -20,6 +20,12 @@
 #   correlate logs alongside the Prometheus metrics. 14-day retention
 #   (compactor). Local-only — no reverse-proxy vhost.
 #
+# nut-exporter: scrapes the NUT server (upsd) on whichever host owns the UPS
+#   USB link — usually the hypervisor or NAS, not the Docker host. Alert rules
+#   in prometheus/rules/ups.yml. A bare-metal nut-client on the other machines
+#   is optional: if the UPS host halts on low battery, a hypervisor stopping
+#   its guests (ACPI / guest agent) already shuts them down cleanly.
+#
 # Secrets (gotify admin pass, per-app tokens, the watchtower shoutrrr URL) live
 # in ./.env (chmod 600, gitignored). ./.env.example documents every key.
 name: monitoring
@@ -109,6 +115,28 @@ services:
       - default
     healthcheck:
       test: ["CMD", "wget", "-q", "--spider", "http://localhost:9100/metrics"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  nut-exporter:
+    <<: *common
+    mem_limit: 128m
+    pids_limit: 128
+    image: ghcr.io/druggeri/nut_exporter:latest
+    container_name: nut-exporter
+    restart: unless-stopped
+    environment:
+      # NUT server = whichever host has the UPS on USB and runs nut-server
+      # (upsd). Often the hypervisor or the NAS rather than the Docker host.
+      # Read-only VAR listing over the network needs no NUT credentials.
+      - NUT_EXPORTER_SERVER=10.0.0.9
+      - NUT_EXPORTER_UPS=myups
+      - NUT_EXPORTER_VARIABLES=battery.charge,battery.runtime,battery.voltage,input.voltage,output.voltage,ups.load,ups.status,ups.realpower,ups.realpower.nominal,ups.temperature
+    networks:
+      - default
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:9199/ups_metrics?ups=myups"]
       interval: 30s
       timeout: 5s
       retries: 3

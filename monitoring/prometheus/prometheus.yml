@@ -37,3 +37,12 @@ scrape_configs:
       - targets: ["cadvisor:8080"]
         labels:
           instance: homelab-01
+
+  - job_name: nut
+    metrics_path: /ups_metrics
+    params:
+      ups: ["myups"]
+    static_configs:
+      - targets: ["nut-exporter:9199"]
+        labels:
+          instance: ups-host

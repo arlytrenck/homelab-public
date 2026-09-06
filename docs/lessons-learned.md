@@ -130,3 +130,29 @@ still resolves normally through the real upstream. If a public-facing service
 works from outside the house but times out or fails from inside it, check
 whether you're hairpinning before assuming it's a firewall or DNS
 misconfiguration.
+
+## Monitor the UPS from a container, but let the OS handle shutdown
+
+A USB UPS talks to exactly one host — whichever machine its data cable is
+plugged into. On a homelab that's usually the hypervisor or the NAS, not
+the box running your Docker stack. Network UPS Tools (NUT) splits cleanly:
+`nut-server` runs on that one host (driver + `upsd`), and everything else
+is a client. For *metrics*, you don't even need a client — a small
+exporter container (`nut_exporter`) on the monitoring host reads `upsd`
+over the network (port 3493, read-only variable listing needs no
+credentials) and Prometheus scrapes it like anything else. Status comes
+out as one gauge per flag: `network_ups_tools_ups_status{flag="OL"}`,
+`{flag="OB"}` (on battery), `{flag="LB"}` (low battery), `{flag="FSD"}`
+(forced shutdown). Alert on `OB`, `LB`, low `battery.runtime`, low
+`battery.charge`, and the exporter being down.
+
+For *shutdown*, resist installing `nut-client` on every VM. If the UPS
+host is a hypervisor, its normal shutdown path already stops the guests
+gracefully (ACPI + guest agent) before it halts — so a single
+`SHUTDOWNCMD` on the NUT server that powers the host down cascades to
+everything. Only add a bare-metal `nut-client` (`upsmon` in secondary
+mode, pointed at the server) where you need a *specific* stop order that
+the hypervisor's default won't give you. One more gotcha: the default
+`nut_exporter` variable set is short — if `battery.runtime` or
+`output.voltage` come back missing, set `NUT_EXPORTER_VARIABLES`
+explicitly.
