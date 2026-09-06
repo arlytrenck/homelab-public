@@ -6,6 +6,27 @@ Notable changes to this repo. No version tags — entries grouped by date
 
 ## [Unreleased]
 
+### Added (2026-09-06)
+- **`docs/` expanded** — six new files, linked from the README's Further
+  reading section:
+  - `docs/service-catalog.md` — every service: port, how it's reached, auth
+    posture, update policy (Watchtower report vs pinned/manual), and backup
+    coverage.
+  - `docs/monitoring-and-alerting.md` — the metrics → Alertmanager →
+    Gotify/email pipeline in full, what each rule group watches, and the
+    design choices worth stealing (alert on the fill-rate derivative,
+    freshness metrics via the textfile collector, keeping black-box checks
+    independent, one-problem-one-notification).
+  - `docs/backup-strategy.md` — the protected tiers *and* an honest list of
+    what the design does **not** cover: single physical failure domain / not
+    3-2-1, a backup that runs but is wrong, state outside the compose tree,
+    encryption-key loss, ransomware from a compromised host.
+  - `docs/runbooks/add-a-service.md`, `docs/runbooks/add-a-vhost.md`,
+    `docs/runbooks/rotate-a-secret.md` — proxy-neutral, sanitized
+    step-by-steps for the recurring jobs, each cross-linking the relevant
+    `lessons-learned.md` entry (notably the forward-auth-block vs
+    authorization-rule two-step).
+
 ### Changed
 - **`analytics/`** — Umami went from a LAN-only trial to a real public
   deployment: a dedicated reverse-proxy vhost now exposes the tracking

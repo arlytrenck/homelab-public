@@ -147,6 +147,19 @@ docker compose -f <stack>/docker-compose.yaml logs -f <service>
 - [`docs/hardening-conventions.md`](docs/hardening-conventions.md) — the
   reasoning behind the `x-common` anchor, resource-limit sizing, and the
   watchtower/autoheal split.
+- [`docs/service-catalog.md`](docs/service-catalog.md) — every service: port,
+  how it's reached, auth posture, update policy, backup coverage.
+- [`docs/monitoring-and-alerting.md`](docs/monitoring-and-alerting.md) — the
+  full metrics → Alertmanager → push pipeline, what's covered by rules, and
+  the design choices (alert on the derivative, freshness metrics, independent
+  black-box checks).
+- [`docs/backup-strategy.md`](docs/backup-strategy.md) — what's protected,
+  how, and an honest list of what this design still does **not** cover
+  (single failure domain, key loss, ransomware).
+- [`docs/runbooks/`](docs/runbooks/) — step-by-step for the recurring jobs:
+  [add a service](docs/runbooks/add-a-service.md),
+  [add a reverse-proxy vhost](docs/runbooks/add-a-vhost.md),
+  [rotate a secret](docs/runbooks/rotate-a-secret.md).
 - [`docs/lessons-learned.md`](docs/lessons-learned.md) — real mistakes this
   setup made and fixed (an exposed VNC port, NAS-mounted scratch disk,
   a clustering feature that made things worse), so you can skip them.
