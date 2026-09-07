@@ -38,6 +38,15 @@ scrape_configs:
         labels:
           instance: homelab-01
 
+  # Grafana Alloy — the log shipper (replaced promtail 2026-09-07). Its own
+  # /metrics expose loki.write / loki.source.docker pipeline counters; see
+  # rules/monitoring.yml for the Alloy* alerts.
+  - job_name: alloy
+    static_configs:
+      - targets: ["alloy:12345"]
+        labels:
+          instance: homelab-01
+
   - job_name: nut
     metrics_path: /ups_metrics
     params:
