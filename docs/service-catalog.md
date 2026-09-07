@@ -38,7 +38,6 @@ posture, and how it's updated and backed up. Hostnames are placeholders
 | radarr | 7878 | `rdr.example.com` | SSO (two-factor) | Renovate | app dir in `/docker` rsync |
 | prowlarr | 9696 | `prl.example.com` | SSO (two-factor) | Renovate | app dir in `/docker` rsync |
 | bazarr | 6767 | `bzr.example.com` | SSO (two-factor) | Renovate | config in `/docker` rsync |
-| flaresolverr | 8191 | internal | none (Prowlarr calls it) | Renovate | stateless |
 | seerr | 5055 | `srr.example.com` | own login (media-server SSO) | Renovate | config dir in `/docker` rsync |
 | tdarr | 8265 / 8266 | `tdr.example.com` | own login | Renovate | `cpus`-capped; DB dir in `/docker` rsync |
 | komga | 25600 | `kmg.example.com` | own login | Renovate | DB + `data/` in `/docker` rsync |
@@ -63,7 +62,8 @@ posture, and how it's updated and backed up. Hostnames are placeholders
 | alertmanager-gotify | internal | — | — | Renovate | stateless bridge |
 | gotify | 8070→80 | LAN IP + `gotify.example.com` (no SSO — token auth) | app/client tokens | Renovate | messages volume (transient) |
 | node-exporter / cadvisor | internal | — | — | Renovate (cadvisor digest-pinned) | stateless |
-| loki / promtail | internal | — | — | Renovate | log store (transient) |
+| loki | internal | — | — | Renovate | log store (transient) |
+| alloy | 12345 | internal (`127.0.0.1` debug UI) | — | Renovate | ships container logs to loki; read offsets in a volume |
 | uptime-kuma | 3001 | LAN IP | own login | Renovate | sqlite in `/docker` rsync |
 | dozzle | 8087→8080 | `dzl.example.com` | SSO (one-factor) | Renovate | stateless (reads the Docker socket read-only) |
 | autoheal | — | — | — | Renovate | restarts `autoheal=true` containers when unhealthy |

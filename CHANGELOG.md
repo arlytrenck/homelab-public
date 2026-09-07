@@ -6,6 +6,19 @@ Notable changes to this repo. No version tags — entries grouped by date
 
 ## [Unreleased]
 
+### Changed (2026-09-07 — deprecated-image cleanup)
+- **promtail → Grafana Alloy** in `monitoring/`. Grafana deprecated promtail
+  (Feb 2025); Alloy is the successor. New `monitoring/alloy/config.alloy`
+  (River) is a 1:1 port of the promtail docker-SD + relabel config. Alloy
+  reads logs over the Docker API, so the `/var/lib/docker/containers` bind is
+  gone; read offsets move to the `alloy_data` volume. Debug UI on
+  `127.0.0.1:12345`. Loki/retention/Grafana datasource unchanged.
+- **Removed flaresolverr** from `media/` — upstream abandoned (last release
+  Nov 2023), no longer clears current Cloudflare challenges.
+- **Pinned `komga` to `:latest`** so `docker:pinDigests` (Renovate) tracks
+  it; it was previously an untagged `gotson/komga`.
+- README, `docs/service-catalog.md`, `docs/monitoring-and-alerting.md` updated.
+
 ### Changed (2026-09-07 — Watchtower → Renovate)
 - **Removed Watchtower** from `monitoring/` — its `containrrr/watchtower`
   upstream is abandoned. It was monitor-only here anyway (report to gotify,
