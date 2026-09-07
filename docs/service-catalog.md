@@ -15,7 +15,7 @@ posture, and how it's updated and backed up. Hostnames are placeholders
 
 | Service | Port | Reach | Auth | Updates | State / backup |
 |---------|------|-------|------|---------|----------------|
-| homepage | 3000 | LAN IP + `home.example.com` | SSO (one-factor) | Watchtower (report) | config in-repo; no data |
+| homepage | 3000 | LAN IP + `home.example.com` | SSO (one-factor) | Renovate | config in-repo; no data |
 
 ## identity
 
@@ -33,18 +33,18 @@ posture, and how it's updated and backed up. Hostnames are placeholders
 
 | Service | Port | Reach | Auth | Updates | State / backup |
 |---------|------|-------|------|---------|----------------|
-| emby | 8096 / 8920 | `mby.example.com` + LAN IP | own login | Watchtower | metadata dir in `/docker` rsync; DB has its own scheduled export |
-| sonarr | 8989 | `snr.example.com` | SSO (two-factor) | Watchtower | app dir in `/docker` rsync |
-| radarr | 7878 | `rdr.example.com` | SSO (two-factor) | Watchtower | app dir in `/docker` rsync |
-| prowlarr | 9696 | `prl.example.com` | SSO (two-factor) | Watchtower | app dir in `/docker` rsync |
-| bazarr | 6767 | `bzr.example.com` | SSO (two-factor) | Watchtower | config in `/docker` rsync |
-| flaresolverr | 8191 | internal | none (Prowlarr calls it) | Watchtower | stateless |
-| seerr | 5055 | `srr.example.com` | own login (media-server SSO) | Watchtower | config dir in `/docker` rsync |
-| tdarr | 8265 / 8266 | `tdr.example.com` | own login | Watchtower | `cpus`-capped; DB dir in `/docker` rsync |
-| komga | 25600 | `kmg.example.com` | own login | Watchtower | DB + `data/` in `/docker` rsync |
-| tinymediamanager | 4000 (+ 5900 VNC) | `tmm.example.com` | own login | Watchtower | config in `/docker` rsync; VNC bound host-only |
-| jellystat | 3005→3000 | LAN IP | own login | Watchtower | Postgres — nightly `pg_dumpall` (age) |
-| jellystat-db | internal | — | — | Watchtower | see jellystat |
+| emby | 8096 / 8920 | `mby.example.com` + LAN IP | own login | Renovate | metadata dir in `/docker` rsync; DB has its own scheduled export |
+| sonarr | 8989 | `snr.example.com` | SSO (two-factor) | Renovate | app dir in `/docker` rsync |
+| radarr | 7878 | `rdr.example.com` | SSO (two-factor) | Renovate | app dir in `/docker` rsync |
+| prowlarr | 9696 | `prl.example.com` | SSO (two-factor) | Renovate | app dir in `/docker` rsync |
+| bazarr | 6767 | `bzr.example.com` | SSO (two-factor) | Renovate | config in `/docker` rsync |
+| flaresolverr | 8191 | internal | none (Prowlarr calls it) | Renovate | stateless |
+| seerr | 5055 | `srr.example.com` | own login (media-server SSO) | Renovate | config dir in `/docker` rsync |
+| tdarr | 8265 / 8266 | `tdr.example.com` | own login | Renovate | `cpus`-capped; DB dir in `/docker` rsync |
+| komga | 25600 | `kmg.example.com` | own login | Renovate | DB + `data/` in `/docker` rsync |
+| tinymediamanager | 4000 (+ 5900 VNC) | `tmm.example.com` | own login | Renovate | config in `/docker` rsync; VNC bound host-only |
+| jellystat | 3005→3000 | LAN IP | own login | Renovate | Postgres — nightly `pg_dumpall` (age) |
+| jellystat-db | internal | — | — | Renovate | see jellystat |
 
 ## media/immich
 
@@ -57,32 +57,34 @@ posture, and how it's updated and backed up. Hostnames are placeholders
 
 | Service | Port | Reach | Auth | Updates | State / backup |
 |---------|------|-------|------|---------|----------------|
-| prometheus | 9090 | internal | — | Watchtower | TSDB (not backed up — rebuildable); rules in-repo |
-| grafana | 3001→3000 | `grf.example.com` | SSO (two-factor) | Watchtower | `grafana.db` in `/docker` rsync |
-| alertmanager | 9093 | internal (on `frontend`) | — | Watchtower | config in-repo |
-| alertmanager-gotify | internal | — | — | Watchtower | stateless bridge |
-| gotify | 8070→80 | LAN IP + `gotify.example.com` (no SSO — token auth) | app/client tokens | Watchtower | messages volume (transient) |
-| node-exporter / cadvisor | internal | — | — | Watchtower (cadvisor digest-pinned) | stateless |
-| loki / promtail | internal | — | — | Watchtower | log store (transient) |
-| uptime-kuma | 3001 | LAN IP | own login | Watchtower | sqlite in `/docker` rsync |
-| dozzle | 8087→8080 | `dzl.example.com` | SSO (one-factor) | Watchtower | stateless (reads the Docker socket read-only) |
-| watchtower | — | — | — | self | monitor-only: reports, never applies |
-| autoheal | — | — | — | Watchtower | restarts `autoheal=true` containers when unhealthy |
+| prometheus | 9090 | internal | — | Renovate | TSDB (not backed up — rebuildable); rules in-repo |
+| grafana | 3001→3000 | `grf.example.com` | SSO (two-factor) | Renovate | `grafana.db` in `/docker` rsync |
+| alertmanager | 9093 | internal (on `frontend`) | — | Renovate | config in-repo |
+| alertmanager-gotify | internal | — | — | Renovate | stateless bridge |
+| gotify | 8070→80 | LAN IP + `gotify.example.com` (no SSO — token auth) | app/client tokens | Renovate | messages volume (transient) |
+| node-exporter / cadvisor | internal | — | — | Renovate (cadvisor digest-pinned) | stateless |
+| loki / promtail | internal | — | — | Renovate | log store (transient) |
+| uptime-kuma | 3001 | LAN IP | own login | Renovate | sqlite in `/docker` rsync |
+| dozzle | 8087→8080 | `dzl.example.com` | SSO (one-factor) | Renovate | stateless (reads the Docker socket read-only) |
+| autoheal | — | — | — | Renovate | restarts `autoheal=true` containers when unhealthy |
 
 ## automation / analytics / networking
 
 | Service | Port | Reach | Auth | Updates | State / backup |
 |---------|------|-------|------|---------|----------------|
-| n8n | 5678 | `n8n.example.com` | SSO (two-factor) — webhooks need a path exception | Watchtower | data dir in `/docker` rsync; encryption key in `.env` |
-| umami | 3006→3000 | LAN IP + `stats.example.com` | own login (collect endpoint is public) | Watchtower | Postgres |
-| umami-db | internal | — | — | Watchtower | see umami |
-| adguard-home | 53 (+ 3007 UI) | LAN IP:53 + `adg.example.com` | SSO on the UI | Watchtower | config via its REST API; conf dir in `/docker` rsync |
+| n8n | 5678 | `n8n.example.com` | SSO (two-factor) — webhooks need a path exception | Renovate | data dir in `/docker` rsync; encryption key in `.env` |
+| umami | 3006→3000 | LAN IP + `stats.example.com` | own login (collect endpoint is public) | Renovate | Postgres |
+| umami-db | internal | — | — | Renovate | see umami |
+| adguard-home | 53 (+ 3007 UI) | LAN IP:53 + `adg.example.com` | SSO on the UI | Renovate | config via its REST API; conf dir in `/docker` rsync |
 
 ## Notes
 
-- **"manual (pinned)"** = carries `com.centurylinklabs.watchtower.enable=false`;
-  bumped by hand after reading release notes. Everything else follows
-  `:latest` and Watchtower reports (never applies) new digests nightly.
+- **"manual (pinned)"** = images pinned to a real version tag; bumped by hand
+  after reading release notes (Renovate still opens the PR, it's just never
+  auto-merged and carries a `review-release-notes` label). Everything else is
+  on `:latest`, digest-pinned by Renovate and rolled up into one weekly PR.
+  (Watchtower was removed 2026-09-07 — abandoned upstream; the leftover
+  `com.centurylinklabs.watchtower.enable=false` labels are now inert.)
 - **"`/docker` rsync"** = the plaintext part of the nightly backup — the
   compose tree minus secrets and live datadirs. Database *contents* get a
   separate `pg_dumpall` / sqlite `.backup`, age-encrypted.

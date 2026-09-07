@@ -6,6 +6,19 @@ Notable changes to this repo. No version tags — entries grouped by date
 
 ## [Unreleased]
 
+### Changed (2026-09-07 — Watchtower → Renovate)
+- **Removed Watchtower** from `monitoring/` — its `containrrr/watchtower`
+  upstream is abandoned. It was monitor-only here anyway (report to gotify,
+  never apply).
+- **Added Renovate** as the replacement: `renovate.json` +
+  `.github/workflows/renovate.yml` (manual-trigger in this showcase copy —
+  needs a `RENOVATE_TOKEN` secret on a fork; see `docs/renovate.md`). It
+  opens a PR per image bump; `:latest` images digest-pinned + grouped weekly;
+  immich / *arr grouped; authelia / vaultwarden / postgres+valkey majors get
+  individual `review-release-notes` PRs. README, `docs/hardening-conventions.md`,
+  `docs/getting-started.md`, `docs/service-catalog.md` updated;
+  `WATCHTOWER_*` dropped from `monitoring/.env.example` + `docs/env-inventory.md`.
+
 ### Added (2026-09-06)
 - **`docs/` expanded** — six new files, linked from the README's Further
   reading section:

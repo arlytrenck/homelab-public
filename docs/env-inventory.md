@@ -20,4 +20,3 @@ _For anything sensitive, record where the real value lives in `docs/secrets.md`.
 | media | `TMM_VNC_PASSWORD` | — |
 | monitoring | `GOTIFY_DEFAULTUSER_PASS` | changeme-long-random |
 | monitoring | `GOTIFY_TOKEN_ALERTMANAGER` | — |
-| monitoring | `WATCHTOWER_NOTIFICATION_URL` | — |

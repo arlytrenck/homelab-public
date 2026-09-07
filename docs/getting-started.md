@@ -76,8 +76,8 @@ Then, stack by stack:
 
 [`docs/hardening-conventions.md`](hardening-conventions.md) explains the
 reasoning behind every convention here (why `no-new-privileges`, why
-`mem_limit` sized the way it is, why Watchtower only reports instead of
-auto-applying updates). [`docs/lessons-learned.md`](lessons-learned.md) is
+`mem_limit` sized the way it is, why image updates come in as
+Renovate PRs you merge rather than auto-applying). [`docs/lessons-learned.md`](lessons-learned.md) is
 the mistakes that shaped those conventions — read it before you repeat them.
 The single most valuable habit either doc can hand you: after adding any new
 service, run `ss -tlnp` and actually look at what it bound to. Almost every
@@ -131,9 +131,9 @@ better than any single README — do that better:
 - [restic docs](https://restic.readthedocs.io/) — the backup tool this
   setup's (not-included) backup scripts build on; start with its own
   "design" page to understand why it dedupes/encrypts the way it does.
-- [Watchtower docs](https://containrrr.dev/watchtower/) — the update-checker
-  used in monitor-only mode here; its own docs cover the auto-update modes
-  this repo deliberately doesn't use.
+- [Renovate docs](https://docs.renovatebot.com/) — how image updates come in
+  here: a scheduled job opens a PR per bump, CI checks it, you merge. See
+  `docs/renovate.md`. (This replaced Watchtower, whose upstream is abandoned.)
 - [Tailscale docs](https://tailscale.com/kb/) — a mesh VPN is the easiest
   way to reach LAN-only admin UIs (Uptime Kuma, homepage) from outside your
   network without exposing them publicly.

@@ -1,0 +1,49 @@
+name: renovate
+
+# Self-hosted Renovate — the pattern this repo's private twin uses to keep
+# container images current, replacing Watchtower (removed 2026-09-07, its
+# upstream is abandoned). Renovate opens a PR per image bump; the `validate`
+# workflow checks it; you apply by merging + `docker compose up -d`.
+#
+# This showcase copy is **manual-trigger only** — on a fork it does nothing
+# until you:
+#   1. Create a fine-grained PAT scoped to your fork with
+#      Contents + Pull requests + Issues = Read and write.
+#   2. Add it as the `RENOVATE_TOKEN` repository secret.
+#   3. Run this workflow (Actions → renovate → Run workflow), or add a
+#      `schedule:` trigger below.
+#
+# Config: ../renovate.json
+
+on:
+  workflow_dispatch:
+    inputs:
+      dryRun:
+        description: "Dry run (no PRs/issues written)"
+        required: false
+        default: true
+        type: boolean
+
+concurrency:
+  group: renovate
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  renovate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Renovate
+        uses: renovatebot/github-action@v40.3.6
+        env:
+          RENOVATE_REPOSITORIES: ${{ github.repository }}
+          RENOVATE_PLATFORM: github
+          RENOVATE_DRY_RUN: ${{ inputs.dryRun && 'full' || null }}
+          RENOVATE_ONBOARDING: "false"
+          RENOVATE_REQUIRE_CONFIG: "required"
+        with:
+          token: ${{ secrets.RENOVATE_TOKEN }}
+          configurationFile: renovate.json

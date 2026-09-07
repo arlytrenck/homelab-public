@@ -9,8 +9,9 @@
 #
 # Alerting path:  Prometheus rules -> alertmanager -> alertmanager-gotify -> gotify
 #   gotify UI/API: http://10.0.0.10:8070  (LAN + VPN mesh only; token auth)
-# watchtower is MONITOR-ONLY: it reports available image updates to gotify and
-#   never applies them. Apply updates by hand after reading release notes.
+# Image updates: Renovate opens a PR per bump against this repo (see
+#   ../renovate.json + .github/workflows/renovate.yml). Watchtower was removed
+#   2026-09-07 — its upstream is abandoned.
 # autoheal restarts any container labelled `autoheal=true` when it goes
 #   unhealthy — deliberately NOT the databases / authelia.
 #
@@ -26,7 +27,7 @@
 #   is optional: if the UPS host halts on low battery, a hypervisor stopping
 #   its guests (ACPI / guest agent) already shuts them down cleanly.
 #
-# Secrets (gotify admin pass, per-app tokens, the watchtower shoutrrr URL) live
+# Secrets (gotify admin pass, per-app tokens) live
 # in ./.env (chmod 600, gitignored). ./.env.example documents every key.
 name: monitoring
 
@@ -40,27 +41,6 @@ x-common: &common
       max-file: "5"
 
 services:
-  watchtower:
-    <<: *common
-    mem_limit: 256m
-    pids_limit: 256
-    image: nickfedor/watchtower:latest
-    container_name: watchtower
-    restart: unless-stopped
-    environment:
-      - TZ=America/New_York
-      # MONITOR-ONLY: check for newer images and notify, never pull/recreate.
-      - WATCHTOWER_MONITOR_ONLY=true
-      - WATCHTOWER_NO_STARTUP_MESSAGE=true
-      - WATCHTOWER_NOTIFICATION_REPORT=true
-      - WATCHTOWER_NOTIFICATIONS_LEVEL=info
-      # shoutrrr gotify URL, incl. the watchtower app token — set in ./.env
-      - WATCHTOWER_NOTIFICATION_URL=${WATCHTOWER_NOTIFICATION_URL:-}
-      - WATCHTOWER_SCHEDULE=0 0 2 * * *    # daily 02:00 — report only
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-    labels:
-      - "com.centurylinklabs.watchtower.enable=false"   # don't update watchtower itself
 
   prometheus:
     <<: *common
