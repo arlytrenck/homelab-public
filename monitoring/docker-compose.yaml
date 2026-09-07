@@ -15,11 +15,12 @@
 # autoheal restarts any container labelled `autoheal=true` when it goes
 #   unhealthy — deliberately NOT the databases / authelia.
 #
-# loki + promtail: centralized log aggregation. Promtail discovers every
-#   running container via the docker socket (read-only) and ships its
-#   json-file logs to loki; point Grafana's Explore tab at it to search/
-#   correlate logs alongside the Prometheus metrics. 14-day retention
-#   (compactor). Local-only — no reverse-proxy vhost.
+# loki + alloy: centralized log aggregation. Alloy (grafana/alloy, which
+#   replaced the deprecated promtail on 2026-09-07) discovers every running
+#   container via the docker socket (read-only) and ships its logs to loki;
+#   point Grafana's Explore tab at it to search/correlate logs alongside the
+#   Prometheus metrics. 14-day retention (compactor). Local-only — no
+#   reverse-proxy vhost.
 #
 # nut-exporter: scrapes the NUT server (upsd) on whichever host owns the UPS
 #   USB link — usually the hypervisor or NAS, not the Docker host. Alert rules
@@ -387,25 +388,39 @@ services:
     # no healthcheck: this image is distroless (no wget/sh/curl) and Loki has
     # no built-in healthcheck subcommand, same situation as alertmanager-gotify.
 
-  promtail:
+  # alloy: replaced promtail 2026-09-07 — Grafana deprecated promtail (Feb 2025)
+  #   in favour of Alloy. Same job: discover every running container over the
+  #   docker socket and ship its logs to loki. Alloy reads logs through the
+  #   Docker API, so unlike promtail it needs no /var/lib/docker/containers bind.
+  #   Config is River (config.alloy), converted 1:1 from the old promtail YAML.
+  #   Debug UI on 127.0.0.1:12345; --disable-reporting = no phone-home.
+  alloy:
     <<: *common
     mem_limit: 256m
     pids_limit: 256
-    image: grafana/promtail:latest
-    container_name: promtail
+    image: grafana/alloy:latest
+    container_name: alloy
     restart: unless-stopped
     depends_on:
       - loki
-    command: -config.file=/etc/promtail/promtail-config.yml
+    command:
+      - run
+      - --server.http.listen-addr=0.0.0.0:12345
+      - --storage.path=/var/lib/alloy/data
+      - --disable-reporting
+      - /etc/alloy/config.alloy
+    ports:
+      - "127.0.0.1:12345:12345"
     volumes:
-      - ./promtail/promtail-config.yml:/etc/promtail/promtail-config.yml:ro
+      - ./alloy/config.alloy:/etc/alloy/config.alloy:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
-      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - alloy_data:/var/lib/alloy
 
 volumes:
   gotify_data:
   alertmanager_data:
   loki_data:
+  alloy_data:
 
 networks:
   default:

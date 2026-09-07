@@ -13,7 +13,7 @@ app /metrics ──┤──►  Prometheus  ──►  Alertmanager  ──► 
 textfile .prom ┘         │                   └──────────────────────────────────►  email
                          └──►  Grafana (dashboards, the query UI)
 
-promtail  ──►  Loki  ──►  Grafana (logs, same pane)
+alloy     ──►  Loki  ──►  Grafana (logs, same pane)
 Uptime Kuma  (independent black-box HTTP checks + its own status page)
 Dozzle       (live container logs in a browser, no storage)
 ```
@@ -24,8 +24,9 @@ Dozzle       (live container logs in a browser, no storage)
   snapshot status — things that aren't a live endpoint).
 - **Grafana** is the query/dashboard UI for both Prometheus and Loki. Behind
   forward-auth SSO.
-- **Loki + promtail** ship container logs so you can grep across all of them
-  in Grafana without `docker logs` on the box.
+- **Loki + alloy** ship container logs so you can grep across all of them
+  in Grafana without `docker logs` on the box. (Alloy replaced the
+  now-deprecated promtail on 2026-09-07.)
 - **Uptime Kuma** is deliberately *separate* — a black-box "can I actually
   reach this URL" check with its own notifications, so it still works if
   Prometheus itself is down. It also publishes a public status page.

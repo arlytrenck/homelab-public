@@ -1,0 +1,52 @@
+// Container-log shipping to Loki. Converted 1:1 from the old
+// promtail-config.yml (docker_sd_configs + relabel_configs) when Grafana
+// deprecated promtail in favour of Alloy.
+//
+// Alloy pulls logs over the Docker Engine API (unix:///var/run/docker.sock),
+// so there is no /var/lib/docker/containers bind mount and no positions file
+// on a host path — read offsets live under --storage.path (alloy_data volume).
+
+logging {
+  level  = "warn"
+  format = "logfmt"
+}
+
+// Discover every container the daemon knows about, refreshed on an interval.
+discovery.docker "containers" {
+  host             = "unix:///var/run/docker.sock"
+  refresh_interval = "15s"
+}
+
+// Same three rules the promtail config used: readable container name,
+// stdout/stderr stream, and the compose project label.
+discovery.relabel "containers" {
+  targets = discovery.docker.containers.targets
+
+  rule {
+    source_labels = ["__meta_docker_container_name"]
+    regex         = "/(.*)"
+    target_label  = "container"
+  }
+  rule {
+    source_labels = ["__meta_docker_container_log_stream"]
+    target_label  = "stream"
+  }
+  rule {
+    source_labels = ["__meta_docker_container_label_com_docker_compose_project"]
+    target_label  = "compose_project"
+  }
+}
+
+loki.source.docker "containers" {
+  host             = "unix:///var/run/docker.sock"
+  targets          = discovery.relabel.containers.output
+  relabel_rules    = discovery.relabel.containers.rules
+  refresh_interval = "15s"
+  forward_to       = [loki.write.default.receiver]
+}
+
+loki.write "default" {
+  endpoint {
+    url = "http://loki:3100/loki/api/v1/push"
+  }
+}
