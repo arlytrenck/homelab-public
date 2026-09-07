@@ -55,3 +55,34 @@ groups:
           priority: "5"
           summary: "cAdvisor is down"
           description: "Per-container metrics are unavailable — cAdvisor on {{ $labels.instance }} is unreachable."
+
+      # --- Grafana Alloy (log shipping to Loki; replaced promtail 2026-09-07) ---
+      - alert: AlloyDown
+        expr: up{job="alloy"} == 0
+        for: 10m
+        labels: { severity: warning }
+        annotations:
+          priority: "5"
+          summary: "Alloy is down"
+          description: "Container logs are no longer being shipped to Loki — Alloy on {{ $labels.instance }} has been unscrapeable for 10 minutes."
+
+      - alert: AlloyNotShippingLogs
+        expr: |
+          up{job="alloy"} == 1
+          and on (instance)
+          sum by (instance) (rate(loki_write_sent_entries_total[15m])) == 0
+        for: 30m
+        labels: { severity: warning }
+        annotations:
+          priority: "5"
+          summary: "Alloy is up but shipping no logs"
+          description: "Alloy on {{ $labels.instance }} has pushed zero log entries to Loki for 30m while running — the pipeline has stalled (bad config reload, docker.sock, or Loki refusing every write). Some running containers always log."
+
+      - alert: AlloyLogDeliveryFailing
+        expr: sum by (instance) (rate(loki_write_dropped_entries_total[10m])) > 0
+        for: 15m
+        labels: { severity: warning }
+        annotations:
+          priority: "5"
+          summary: "Alloy is dropping log entries"
+          description: "Alloy on {{ $labels.instance }} is dropping entries on the way to Loki for 15m ({{ $value | printf \"%.2f\" }}/s) — check Loki health, disk, and ingestion limits. (A brief burst right after an Alloy restart is the one-time backlog replay and clears itself well inside the 15m window.)"
