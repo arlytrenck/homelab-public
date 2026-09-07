@@ -23,6 +23,11 @@ on:
         required: false
         default: true
         type: boolean
+      forceNow:
+        description: "Ignore renovate.json's schedule window — open all due PRs immediately"
+        required: false
+        default: false
+        type: boolean
 
 concurrency:
   group: renovate
@@ -42,6 +47,7 @@ jobs:
           RENOVATE_REPOSITORIES: ${{ github.repository }}
           RENOVATE_PLATFORM: github
           RENOVATE_DRY_RUN: ${{ inputs.dryRun && 'full' || null }}
+          RENOVATE_FORCE: ${{ inputs.forceNow && '{"schedule":null,"prHourlyLimit":0,"prConcurrentLimit":0}' || null }}
           RENOVATE_ONBOARDING: "false"
           RENOVATE_REQUIRE_CONFIG: "required"
         with:

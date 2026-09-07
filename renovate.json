@@ -17,12 +17,11 @@
   "vulnerabilityAlerts": { "labels": ["security"], "schedule": null },
   "packageRules": [
     {
-      "description": "Roll every plain :latest digest bump into one weekly PR",
+      "description": "Roll every plain :latest digest bump into one weekly PR (top-level schedule gates it)",
       "matchDatasources": ["docker"],
       "matchUpdateTypes": ["digest", "pin"],
       "groupName": "container digests",
-      "commitMessageTopic": "container digests",
-      "schedule": ["before 6am on monday"]
+      "commitMessageTopic": "container digests"
     },
     {
       "description": "Immich moves as a set - server + ML + its Postgres",
@@ -72,10 +71,9 @@
       "automerge": false
     },
     {
-      "description": "GitHub Actions - grouped, monthly, low-noise",
+      "description": "GitHub Actions - grouped into one PR (follows the top-level weekly schedule)",
       "matchManagers": ["github-actions"],
-      "groupName": "github actions",
-      "schedule": ["before 6am on the first day of the month"]
+      "groupName": "github actions"
     }
   ]
 }
