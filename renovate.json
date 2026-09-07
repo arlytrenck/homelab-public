@@ -1,0 +1,81 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    ":dependencyDashboard",
+    ":semanticCommitTypeAll(chore)",
+    "docker:pinDigests"
+  ],
+  "timezone": "America/New_York",
+  "schedule": ["before 6am on monday"],
+  "prConcurrentLimit": 12,
+  "prHourlyLimit": 0,
+  "labels": ["renovate", "dependencies"],
+  "rangeStrategy": "bump",
+  "enabledManagers": ["docker-compose", "dockerfile", "github-actions"],
+  "ignorePaths": ["**/*.bak*", "**/.env*"],
+  "vulnerabilityAlerts": { "labels": ["security"], "schedule": null },
+  "packageRules": [
+    {
+      "description": "Roll every plain :latest digest bump into one weekly PR",
+      "matchDatasources": ["docker"],
+      "matchUpdateTypes": ["digest", "pin"],
+      "groupName": "container digests",
+      "commitMessageTopic": "container digests",
+      "schedule": ["before 6am on monday"]
+    },
+    {
+      "description": "Immich moves as a set - server + ML + its Postgres",
+      "matchDatasources": ["docker"],
+      "matchPackageNames": [
+        "ghcr.io/immich-app/immich-server",
+        "ghcr.io/immich-app/immich-machine-learning",
+        "ghcr.io/immich-app/postgres"
+      ],
+      "groupName": "immich"
+    },
+    {
+      "description": "LinuxServer *arr images share a release cadence",
+      "matchDatasources": ["docker"],
+      "matchPackageNames": [
+        "lscr.io/linuxserver/sonarr",
+        "lscr.io/linuxserver/radarr",
+        "lscr.io/linuxserver/prowlarr",
+        "lscr.io/linuxserver/bazarr"
+      ],
+      "groupName": "linuxserver arr"
+    },
+    {
+      "description": "Read-the-release-notes-first set - individual PRs, never auto",
+      "matchDatasources": ["docker"],
+      "matchPackageNames": [
+        "authelia/authelia",
+        "vaultwarden/server",
+        "cyfershepard/jellystat",
+        "ghcr.io/immich-app/immich-server",
+        "ghcr.io/immich-app/immich-machine-learning"
+      ],
+      "matchUpdateTypes": ["major", "minor"],
+      "addLabels": ["review-release-notes"],
+      "automerge": false
+    },
+    {
+      "description": "Postgres / Valkey majors are a data-format decision",
+      "matchDatasources": ["docker"],
+      "matchPackageNames": [
+        "postgres",
+        "docker.io/valkey/valkey",
+        "ghcr.io/immich-app/postgres"
+      ],
+      "matchUpdateTypes": ["major"],
+      "addLabels": ["review-release-notes", "breaking"],
+      "automerge": false
+    },
+    {
+      "description": "GitHub Actions - grouped, monthly, low-noise",
+      "matchManagers": ["github-actions"],
+      "groupName": "github actions",
+      "schedule": ["before 6am on the first day of the month"]
+    }
+  ]
+}

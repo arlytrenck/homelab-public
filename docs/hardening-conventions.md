@@ -68,20 +68,19 @@ intended.
 
 ## Updates: report, don't auto-apply
 
-Watchtower runs in `WATCHTOWER_MONITOR_ONLY=true` mode — it checks nightly
-for newer image digests and sends a report, but the `docker run` /
-`docker compose up -d` that actually applies an update is always a deliberate
-human action, after reading that image's release notes. A short list of
-services (anything with a fragile or unsupported upgrade path — a stateful
-database, a service whose compatibility with another service isn't
-guaranteed across versions) additionally carry
-`com.centurylinklabs.watchtower.enable=false` so they don't even show up in
-the nightly report; those get bumped on a slower, more deliberate cadence.
+**Renovate** (self-hosted, a scheduled GitHub Action) opens a pull request
+per image bump against this repo. Nothing auto-applies — the `docker compose
+up -d` that actually deploys an update is always a deliberate human action,
+after the `validate` workflow passes and (for the flagged set) the release
+notes are read. `:latest` images are digest-pinned by Renovate so there's a
+concrete thing to bump; the weekly digest bumps land in one grouped PR.
+Services with a fragile upgrade path — a stateful database, a pair that must
+move together — get individual PRs labelled `review-release-notes` that are
+never auto-merged.
 
-One image is pinned to a content digest rather than a tag: its upstream
-`:latest` on its registry had gone stale (no longer moving), so Watchtower
-had nothing to compare against. Pinning to the last-known-good digest and
-bumping it by hand from the project's own release page was the fix.
+(This replaced Watchtower on 2026-09-07 — the `containrrr/watchtower`
+upstream is abandoned. Its leftover `com.centurylinklabs.watchtower.enable`
+labels are now inert.)
 
 ## Self-healing, scoped deliberately
 
