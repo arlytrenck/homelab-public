@@ -21,6 +21,8 @@ The workflow here is **manual-trigger only** and does nothing until you:
    (*Settings → Secrets and variables → Actions*).
 3. *Actions → renovate → Run workflow* (leave "Dry run" on for the first try to
    see what it *would* do), or add a `schedule:` trigger to the workflow.
+   `renovate.json` has a Monday-morning schedule window; tick **`forceNow`** on
+   the Run workflow dialog to ignore it and open all due PRs immediately.
 
 ## What it manages
 
