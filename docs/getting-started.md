@@ -26,8 +26,7 @@ stranger's decisions at 2am. This doc is the path through it.
 ## Don't start with all of this at once
 
 Bringing up all 7 stacks on day one is the wrong way to learn this. A
-reasonable order, each step small enough to actually understand before
-moving on:
+reasonable order, each step small enough to understand before moving on:
 
 1. **One service, no proxy, no auth.** Pick something simple (a `*arr` app,
    or Vaultwarden) and run just its `docker-compose.yaml`, reached by
@@ -55,8 +54,8 @@ so a find-and-replace catches all of it:
 
 | Placeholder | Replace with |
 |---|---|
-| `example.com` | your actual domain |
-| `10.0.0.10` | your host's actual LAN IP |
+| `example.com` | your domain |
+| `10.0.0.10` | your host's LAN IP |
 | `alerts@example.com` | an email you actually read |
 | `homelab-01` | whatever you want your Prometheus `instance` label to say |
 
@@ -84,7 +83,7 @@ service, run `ss -tlnp` and actually look at what it bound to. Almost every
 real problem in this repo's history started with a service quietly
 listening somewhere it shouldn't have.
 
-## Where to actually learn each piece
+## Where to learn each piece
 
 This repo shows *how the pieces fit together*, not how each tool works on
 its own. Each project's own docs — and a few community references that are
