@@ -6,6 +6,27 @@ Notable changes to this repo. No version tags — entries grouped by date
 
 ## [Unreleased]
 
+### Changed (2026-09-08 — editorial pass on two docs)
+`docs/maintenance-calendar.md` and `docs/resource-library.md` were the two
+stylistic outliers in `docs/`: unwrapped 290- and 345-column lines against
+~76 everywhere else, tight em-dashes, and generic advisory prose that could
+have described any homelab. Rewritten to the repo's own conventions and
+grounded in what's actually here. No behavior described has changed.
+
+- **`maintenance-calendar.md`** — the daily list now names the Prometheus
+  rule groups that answer each question (`host`, `containers`, `backup`,
+  `certs`, `ups`) instead of describing them abstractly; weekly review
+  covers Alertmanager silences, `autoheal` restart-masking, and open
+  Renovate PRs; quarterly adds verifying the offline age/restic keys
+  (backup-strategy gap #4 — the one failure that makes every other backup
+  worthless) and an `ss -tlnp` exposure re-audit. Cross-links
+  `renovate.md`, `rotate-a-secret.md`, `env-inventory.md`,
+  `backup-strategy.md`, and `lessons-learned.md`.
+- **`resource-library.md`** — each entry now says *when you'd reach for it*
+  rather than restating its subtitle, and the doc states its relationship
+  to `getting-started.md`'s reading list: this is the look-it-up list, that
+  is the learn-it list. They overlap on four links, deliberately.
+
 ### Fixed (2026-09-08 — documentation drift)
 Docs that no longer matched the compose files, found in a review pass. Only
 prose, apart from one CI fix noted at the end.
