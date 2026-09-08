@@ -70,9 +70,9 @@ intended.
 
 **Renovate** (self-hosted, a scheduled GitHub Action) opens a pull request
 per image bump against this repo. Nothing auto-applies — the `docker compose
-up -d` that actually deploys an update is always a deliberate human action,
-after the `validate` workflow passes and (for the flagged set) the release
-notes are read. `:latest` images are digest-pinned by Renovate so there's a
+up -d` that deploys an update is always a deliberate human action, after the
+`validate` workflow passes and (for the flagged set) the release notes are
+read. `:latest` images are digest-pinned by Renovate so there's a
 concrete thing to bump; the weekly digest bumps land in one grouped PR.
 Services with a fragile upgrade path — a stateful database, a pair that must
 move together — get individual PRs labelled `review-release-notes` that are
