@@ -25,7 +25,7 @@ stranger's decisions at 2am. This doc is the path through it.
 
 ## Don't start with all of this at once
 
-Bringing up all 7 stacks on day one is the wrong way to learn this. A
+Bringing up all 9 stacks on day one is the wrong way to learn this. A
 reasonable order, each step small enough to understand before moving on:
 
 1. **One service, no proxy, no auth.** Pick something simple (a `*arr` app,
@@ -56,8 +56,18 @@ so a find-and-replace catches all of it:
 |---|---|
 | `example.com` | your domain |
 | `10.0.0.10` | your host's LAN IP |
+| `10.0.0.0/24` | your LAN CIDR (the reverse-proxy source-IP guard) |
+| `10.0.0.9` | the host running `nut-server` — whichever machine has the UPS on USB |
+| `myups` | your UPS's name in the NUT config |
 | `alerts@example.com` | an email you actually read |
 | `homelab-01` | whatever you want your Prometheus `instance` label to say |
+| `ups-host` | the Prometheus `instance` label for the UPS scrape target |
+
+The two UPS values only matter if you keep `monitoring/`'s `nut-exporter`.
+If you don't have a UPS on the network, drop that service, its `nut` scrape
+job in `monitoring/prometheus/prometheus.yml`, and
+`monitoring/prometheus/rules/ups.yml` — otherwise you get a permanently
+firing `UPSExporterDown`.
 
 Then, stack by stack:
 
