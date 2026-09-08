@@ -1,6 +1,6 @@
 # Maintenance calendar
 
-A homelab stays reliable through small, observable routines—not heroic catch-up sessions. This calendar turns the repository's health checks, backup jobs, and monitor-only update policy into a repeatable operating rhythm. Adapt the dates, service names, and ownership to your environment.
+A homelab stays reliable through small, observable routines—not heroic catch-up sessions. This calendar turns the repository's health checks, backup jobs, and review-before-apply update policy into a repeatable operating rhythm. Adapt the dates, service names, and ownership to your environment.
 
 ## Operating principles
 
@@ -28,7 +28,7 @@ Pick a low-traffic time and review:
 - Uptime Kuma history, Alertmanager silences, and any containers with repeated restarts.
 - Backup artifacts: confirm a recent encrypted archive or database dump exists, has a plausible size, and matches the intended retention policy.
 - Disk growth in Docker volumes, application databases, media scratch space, and logs.
-- The monitor-only update report. Classify available updates as security, routine, breaking-risk, or deferred with a reason.
+- The open Renovate pull requests. Classify each as security, routine, breaking-risk, or deferred with a reason; merge the ones you have read, and say why the rest are waiting. See [renovate.md](renovate.md).
 - Open infrastructure issues. Convert vague observations into a small, testable next action.
 
 A useful weekly note records what changed, what was checked, and what was deliberately deferred. It makes an outage far easier to reconstruct.

@@ -7,8 +7,8 @@ Notable changes to this repo. No version tags — entries grouped by date
 ## [Unreleased]
 
 ### Fixed (2026-09-08 — documentation drift)
-Docs that no longer matched the compose files, found in a review pass. No
-config changed; only the prose describing it.
+Docs that no longer matched the compose files, found in a review pass. Only
+prose, apart from one CI fix noted at the end.
 - **Uptime Kuma's port** in `docs/service-catalog.md` said `3001` (Grafana's
   host port). It's `3002` — `network_mode: host`, `UPTIME_KUMA_PORT=3002`.
 - **The `frontend` network** was described as three containers across two
@@ -36,6 +36,14 @@ config changed; only the prose describing it.
 - **`docs/renovate.md`, `docs/maintenance-calendar.md`, and
   `docs/resource-library.md`** are now linked from the README's Further
   reading; the latter two weren't reachable from anywhere.
+- **`docs/maintenance-calendar.md`** still described the "monitor-only update
+  policy/report" — the Watchtower posture, replaced by Renovate on
+  2026-09-07. The weekly review step now triages open Renovate PRs.
+- **`.github/workflows/validate.yml`** — the gitleaks job needs
+  `GITHUB_TOKEN` on `pull_request` events (a gitleaks-action v2 requirement);
+  without it the job errored before scanning. Push events were unaffected,
+  so this only surfaced on the repo's first PR. PR comments are disabled so
+  the token stays read-only.
 
 ### Changed (2026-09-07 — deprecated-image cleanup)
 - **promtail → Grafana Alloy** in `monitoring/`. Grafana deprecated promtail
