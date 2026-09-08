@@ -9,6 +9,17 @@ Removed, Fixed, Security.
 
 ## 2026-09-08
 
+### Added
+- **Three missing n8n workflow exports** — `homelab-lan-dns-health`,
+  `homelab-pve-node-health`, and `homelab-sync-mirror-watchdog` were running
+  but had never been exported, so `automation/n8n-workflows/` didn't match
+  what was actually scheduled. `N8N_API_KEY` and `N8N_EXPORT_REWRITES` are
+  now documented in `automation/.env.example.extra`; neither appears in the
+  compose file (both are read by `tools/export-n8n-workflows.sh`), so the
+  generator can't discover them on its own. The exporter refuses to write a
+  workflow still containing a real mount path, home path, private address,
+  or token — an unconfigured run exports nothing rather than leaking.
+
 ### Changed
 - **Editorial pass on `docs/maintenance-calendar.md` and
   `docs/resource-library.md`** — the two stylistic outliers in `docs/`:
@@ -27,6 +38,16 @@ Removed, Fixed, Security.
     than restating its subtitle, and the doc states its relationship to
     `getting-started.md`'s reading list: this is the look-it-up list, that
     is the learn-it list.
+- **`CHANGELOG.md` restructured** to match its own stated convention. The
+  header claimed "grouped by date, newest first" and Keep a Changelog, but
+  an `[Unreleased]` bucket held dated `###` subsections above a bare
+  `## 2026-09-05`, and two sections carried no date at all. Now `## <date>`
+  per day with `### Added/Changed/Removed/Fixed` underneath. The undated
+  sections were dated from git history rather than from the section above
+  them — AdGuard Home and the Umami public deployment turned out to be
+  2026-09-05, not 09-06.
+- **Dropped filler "actually"** from `docs/getting-started.md` and
+  `docs/hardening-conventions.md`.
 
 ### Fixed
 - **Documentation drift** found in a review pass against the compose files,
@@ -81,8 +102,22 @@ Removed, Fixed, Security.
   `docs/hardening-conventions.md`, `docs/getting-started.md`, and
   `docs/service-catalog.md` updated; `WATCHTOWER_*` dropped from
   `monitoring/.env.example` + `docs/env-inventory.md`.
+- **Alloy self-monitoring** — an `alloy` scrape job in
+  `monitoring/prometheus/prometheus.yml` plus three rules in
+  `rules/monitoring.yml`: `AlloyDown`, `AlloyNotShippingLogs` (the pipeline
+  is up but no lines are moving), and `AlloyLogDeliveryFailing` (Loki is
+  dropping writes). A log shipper that dies quietly takes your logs with it
+  and nothing else notices.
 
 ### Changed
+- **CI action versions** — `actions/checkout` v4 → v5 and
+  `renovatebot/github-action` v40 → v46, ahead of the GitHub Actions Node 20
+  deprecation.
+- **Renovate scheduling consolidated** — the per-rule `schedule:` entries on
+  the digest and GitHub Actions groups were redundant with the top-level
+  weekly window and have been dropped; the top-level schedule now gates both.
+  Added a **`forceNow`** toggle to the Run workflow dialog to ignore the
+  window and open all due PRs immediately (see `docs/renovate.md`).
 - **promtail → Grafana Alloy** in `monitoring/`. Grafana deprecated promtail
   (Feb 2025); Alloy is the successor. New `monitoring/alloy/config.alloy`
   (River) is a 1:1 port of the promtail docker-SD + relabel config. Alloy
@@ -101,6 +136,12 @@ Removed, Fixed, Security.
   now inert.
 - **flaresolverr** from `media/` — upstream abandoned (last release
   Nov 2023), no longer clears current Cloudflare challenges.
+
+### Fixed
+- **`UMAMI_TWO_FACTOR_ENCRYPTION_KEY` had no placeholder** in
+  `analytics/.env.example`, so the `.env.example` drift check failed. Given
+  a placeholder value and recorded in `analytics/.env.example.extra` +
+  `docs/env-inventory.md`.
 
 ## 2026-09-06
 
