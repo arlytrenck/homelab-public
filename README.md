@@ -1,8 +1,8 @@
 # homelab-public
 
 A sanitized, public mirror of the Docker Compose infrastructure-as-code
-behind my personal homelab — ~30 self-hosted services on a single VM,
-run the way I'd run production. Companion to
+behind my personal homelab — ~35 containers across 9 Compose projects on a
+single VM, run the way I'd run production. Companion to
 [`sysadmin-linux`](https://github.com/arlytrenck/sysadmin-linux) and
 [`sysadmin-windows`](https://github.com/arlytrenck/sysadmin-windows).
 
@@ -35,10 +35,14 @@ that shaped the conventions here, so you can skip repeating them.
 | `networking/` | `bootstrap.sh` + `docker-compose.yaml` (AdGuard Home) + `README.md` | creates the shared external `frontend` Docker network; AdGuard Home = LAN DNS split-horizon + ad blocking |
 
 One Compose project per directory; the project `name:` is set explicitly in
-each file. `frontend` is an **external** Docker network (shared by homepage +
-grafana + prometheus); `networking/bootstrap.sh` creates it idempotently.
-`homepage` also joins `media_default` (the media project's own network) so
-the Emby/*arr dashboard widgets can use container DNS names.
+each file. `frontend` is an **external** Docker network shared by eight
+containers across five stacks — `homepage`, `prometheus`, `grafana`,
+`gotify`, `alertmanager`, `umami`, `n8n`, `adguardhome` — so they can reach
+each other by container name without publishing more than necessary.
+`networking/bootstrap.sh` creates it idempotently, and it has to exist before
+any of those five stacks come up. `homepage` also joins `media_default` (the
+media project's own network) so the Emby/*arr dashboard widgets can use
+container DNS names.
 
 ## Conventions
 
@@ -142,7 +146,7 @@ docker compose -f <stack>/docker-compose.yaml logs -f <service>
 
 - [`docs/getting-started.md`](docs/getting-started.md) — building your own?
   Start here: prerequisites this repo assumes, a saner bring-up order than
-  all 7 stacks at once, and how to swap in your own domain/IPs.
+  all 9 stacks at once, and how to swap in your own domain/IPs.
 - [`docs/architecture.md`](docs/architecture.md) — network topology, boot
   order, and how the pieces fit together.
 - [`docs/hardening-conventions.md`](docs/hardening-conventions.md) — the
@@ -169,6 +173,13 @@ docker compose -f <stack>/docker-compose.yaml logs -f <service>
 - [`docs/n8n-automation.md`](docs/n8n-automation.md) — using n8n to replace
   cron for scheduled maintenance scripts, with real per-run history;
   sanitized example workflows in `automation/n8n-workflows/`.
+- [`docs/renovate.md`](docs/renovate.md) — how image updates arrive as PRs,
+  what's grouped vs individual, and what to set up on a fork.
+- [`docs/maintenance-calendar.md`](docs/maintenance-calendar.md) — the
+  daily/weekly/monthly/quarterly routine that keeps the above honest.
+- [`docs/resource-library.md`](docs/resource-library.md) — upstream docs for
+  each tool used here, when you need vendor behavior rather than this repo's
+  opinion of it.
 
 ## What's not here
 

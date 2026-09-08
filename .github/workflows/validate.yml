@@ -7,6 +7,7 @@ on:
 
 permissions:
   contents: read
+  pull-requests: read
 
 jobs:
   gitleaks:
@@ -19,6 +20,13 @@ jobs:
       - uses: gitleaks/gitleaks-action@v2
         env:
           GITLEAKS_CONFIG: .gitleaks.toml
+          # Required for pull_request events since gitleaks-action v2 —
+          # without it the job errors out before scanning. Push events
+          # don't need it, which is why this only surfaced on the first PR.
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # The failed check is the signal; no PR comment needed, so the
+          # token stays read-only rather than needing pull-requests: write.
+          GITLEAKS_ENABLE_COMMENTS: "false"
           # GITLEAKS_LICENSE is only required for GitHub *orgs*. A personal
           # account's private repos run gitleaks-action for free.
 
