@@ -9,6 +9,7 @@ under [`monitoring/prometheus/rules/`](../monitoring/prometheus/rules/).
 ```
 node-exporter ─┐
 cadvisor ──────┤
+nut-exporter ──┤
 app /metrics ──┤──►  Prometheus  ──►  Alertmanager  ──►  alertmanager-gotify  ──►  Gotify (phone push)
 textfile .prom ┘         │                   └──────────────────────────────────►  email
                          └──►  Grafana (dashboards, the query UI)
@@ -18,10 +19,16 @@ Uptime Kuma  (independent black-box HTTP checks + its own status page)
 Dozzle       (live container logs in a browser, no storage)
 ```
 
-- **Prometheus** scrapes node-exporter (host), cadvisor (per-container), any
-  app that exposes `/metrics`, and a **textfile collector** directory that
-  cron scripts write `.prom` files into (backup freshness, cert expiry,
-  snapshot status — things that aren't a live endpoint).
+- **Prometheus** scrapes node-exporter (host), cadvisor (per-container),
+  nut-exporter (UPS), any app that exposes `/metrics`, and a **textfile
+  collector** directory that cron scripts write `.prom` files into (backup
+  freshness, cert expiry, snapshot status — things that aren't a live
+  endpoint).
+- **nut-exporter** reads `upsd` over the network from whichever host has the
+  UPS on USB — usually the hypervisor or the NAS, not the Docker host. It
+  needs no NUT credentials for a read-only variable listing. See the
+  [lessons-learned entry](lessons-learned.md#monitor-the-ups-from-a-container-but-let-the-os-handle-shutdown)
+  on why shutdown stays the OS's job.
 - **Grafana** is the query/dashboard UI for both Prometheus and Loki. Behind
   forward-auth SSO.
 - **Loki + alloy** ship container logs so you can grep across all of them
@@ -56,6 +63,7 @@ Dozzle       (live container logs in a browser, no storage)
 | `monitoring` | a scrape target missing, Prometheus config-reload failed, Alertmanager down or failing to notify, cadvisor down |
 | `backup` | any backup job's last-success timestamp stale, the config-snapshot pipeline failing, `restic check` failing, the monthly restore drill stale or failed |
 | `certs` | TLS leaf cert expiring soon / very soon / expired (fed by a cron script that probes each vhost) |
+| `ups` | on battery, low battery, forced shutdown, low charge / runtime, replace-battery flag, overload, exporter down |
 
 Rules are validated in CI (`promtool check rules`).
 

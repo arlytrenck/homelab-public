@@ -1,8 +1,8 @@
 # Architecture
 
 One Proxmox host, one Ubuntu Server LTS VM, everything else in Docker
-Compose. ~30 containers across 7 stacks (see the [README](../README.md) for
-the full service list).
+Compose. ~35 containers across 9 Compose projects (see the
+[README](../README.md) for the full service list).
 
 ## Network topology
 
@@ -28,30 +28,39 @@ the full service list).
   browser-facing proxy (Emby's native apps/TVs) or because they're LAN-only
   tooling with no need for a public hostname (homepage, Uptime Kuma,
   Jellystat).
-- Two Docker networks cross stack boundaries: `frontend` (external, created
-  once by `networking/bootstrap.sh`) lets `homepage` reach `grafana` and
-  `prometheus` by container name; `media_default` (auto-created by the
+- Two Docker networks cross stack boundaries. `frontend` (external, created
+  once by `networking/bootstrap.sh`) is joined by eight containers across
+  five stacks — `homepage` (frontend), `prometheus`, `grafana`, `gotify`,
+  `alertmanager` (monitoring), `umami` (analytics), `n8n` (automation), and
+  `adguardhome` (networking) — so they resolve each other by container name
+  instead of publishing on the LAN IP. `media_default` (auto-created by the
   `media/` project) lets `homepage`'s dashboard widgets reach Emby/`*arr` by
   name now that those services no longer publish on the LAN IP.
 
 ## Boot order
 
 ```
-networking bootstrap  ->  media  ->  monitoring  ->  identity  ->  security
-                      ->  media/immich  ->  frontend
+networking bootstrap          (creates the external `frontend` network)
+  ->  networking  ->  media  ->  monitoring  ->  identity  ->  security
+  ->  media/immich  ->  automation  ->  analytics  ->  frontend
 ```
 
-`frontend` (the homepage dashboard) has to come up last — it depends on both
-the `frontend` Docker network existing and the `media_default` network
-already existing (created when `media/` first comes up).
+Two constraints drive this, and everything else is preference:
+
+1. **The bootstrap runs first.** Every stack that attaches to the external
+   `frontend` network — `networking`, `monitoring`, `automation`,
+   `analytics`, and `frontend` — fails to come up if that network doesn't
+   exist yet. This also applies after a `docker network prune`.
+2. **`frontend` (the homepage dashboard) comes up last**, because it needs
+   the `media_default` network too, and that only exists once `media/` has
+   come up at least once.
 
 ## Data flow
 
-- **Media**: Sonarr/Radarr manage the library, Prowlarr feeds them indexers
-  (via FlareSolverr for Cloudflare-protected trackers), Bazarr attaches
-  subtitles, Seerr is the request front-end, Tdarr transcodes in the
-  background, Emby serves playback, Jellystat reads Emby's own playback
-  history for watch-stats.
+- **Media**: Sonarr/Radarr manage the library, Prowlarr feeds them indexers,
+  Bazarr attaches subtitles, Seerr is the request front-end, Tdarr
+  transcodes in the background, Emby serves playback, Jellystat reads Emby's
+  own playback history for watch-stats.
 - **Photos**: Immich is close to the upstream reference compose file on
   purpose — server, ML (face/object recognition), Postgres, Redis — so
   upgrades stay a matter of pulling the latest upstream file and re-applying

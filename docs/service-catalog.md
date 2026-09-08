@@ -62,9 +62,10 @@ posture, and how it's updated and backed up. Hostnames are placeholders
 | alertmanager-gotify | internal | — | — | Renovate | stateless bridge |
 | gotify | 8070→80 | LAN IP + `gotify.example.com` (no SSO — token auth) | app/client tokens | Renovate | messages volume (transient) |
 | node-exporter / cadvisor | internal | — | — | Renovate (cadvisor digest-pinned) | stateless |
+| nut-exporter | internal | — | — | Renovate | stateless; reads `upsd` on whichever host owns the UPS |
 | loki | internal | — | — | Renovate | log store (transient) |
 | alloy | 12345 | internal (`127.0.0.1` debug UI) | — | Renovate | ships container logs to loki; read offsets in a volume |
-| uptime-kuma | 3001 | LAN IP | own login | Renovate | sqlite in `/docker` rsync |
+| uptime-kuma | 3002 | LAN IP (`network_mode: host`, binds the LAN IP only) | own login | Renovate | sqlite in `/docker` rsync |
 | dozzle | 8087→8080 | `dzl.example.com` | SSO (one-factor) | Renovate | stateless (reads the Docker socket read-only) |
 | autoheal | — | — | — | Renovate | restarts `autoheal=true` containers when unhealthy |
 
