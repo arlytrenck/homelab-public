@@ -2,12 +2,10 @@
   "id": "V7XEVMvNvu0Oh8m3",
   "name": "Homelab certs + update reporting",
   "active": false,
-  "activeVersionId": null,
   "createdAt": "2026-09-05T13:37:27.041Z",
   "updatedAt": "2026-09-05T13:37:54.771Z",
   "isArchived": false,
   "versionId": "da05ae50-feb7-43ea-9454-d3c6d148bd77",
-  "triggerCount": 0,
   "nodes": [
     {
       "parameters": {
@@ -132,7 +130,24 @@
     "executionOrder": "v1",
     "binaryMode": "separate"
   },
-  "staticData": null,
+  "staticData": {
+    "node:Daily 06:30": {
+      "recurrenceRules": [
+        null
+      ],
+      "recurrenceRuleSignatures": [
+        null
+      ]
+    },
+    "node:Monday 08:00": {
+      "recurrenceRules": [
+        null
+      ],
+      "recurrenceRuleSignatures": [
+        null
+      ]
+    }
+  },
   "pinData": {},
   "meta": {
     "templateCredsSetupCompleted": true
@@ -146,6 +161,5 @@
       "createdAt": "2026-09-05T13:37:27.046Z",
       "updatedAt": "2026-09-05T13:37:27.046Z"
     }
-  ],
-  "activeVersion": null
+  ]
 }

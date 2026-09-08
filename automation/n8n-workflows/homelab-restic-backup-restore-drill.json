@@ -2,12 +2,10 @@
   "id": "vA4XfeaIKdFBMX8c",
   "name": "Homelab restic backup + restore drill",
   "active": false,
-  "activeVersionId": null,
   "createdAt": "2026-09-05T13:35:48.983Z",
   "updatedAt": "2026-09-05T13:36:35.735Z",
   "isArchived": false,
   "versionId": "b061eead-a2ab-41b7-98c0-caed657ff2cb",
-  "triggerCount": 0,
   "nodes": [
     {
       "parameters": {
@@ -132,7 +130,24 @@
     "executionOrder": "v1",
     "binaryMode": "separate"
   },
-  "staticData": null,
+  "staticData": {
+    "node:Daily 04:10": {
+      "recurrenceRules": [
+        null
+      ],
+      "recurrenceRuleSignatures": [
+        null
+      ]
+    },
+    "node:1st of month 05:00": {
+      "recurrenceRules": [
+        null
+      ],
+      "recurrenceRuleSignatures": [
+        null
+      ]
+    }
+  },
   "pinData": {},
   "meta": {
     "templateCredsSetupCompleted": true
@@ -146,6 +161,5 @@
       "createdAt": "2026-09-05T13:35:48.991Z",
       "updatedAt": "2026-09-05T13:35:48.991Z"
     }
-  ],
-  "activeVersion": null
+  ]
 }

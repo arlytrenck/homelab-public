@@ -2,12 +2,10 @@
   "id": "kET9FyPmlMhTslvl",
   "name": "Homelab nightly backup orchestration",
   "active": false,
-  "activeVersionId": null,
   "createdAt": "2026-09-05T13:28:49.954Z",
   "updatedAt": "2026-09-05T13:33:42.760Z",
   "isArchived": false,
   "versionId": "0fb01078-a96e-4206-baef-2e0b341199f9",
-  "triggerCount": 0,
   "nodes": [
     {
       "parameters": {
@@ -112,7 +110,16 @@
     "executionOrder": "v1",
     "binaryMode": "separate"
   },
-  "staticData": null,
+  "staticData": {
+    "node:Schedule Trigger": {
+      "recurrenceRules": [
+        null
+      ],
+      "recurrenceRuleSignatures": [
+        null
+      ]
+    }
+  },
   "pinData": {},
   "meta": {
     "templateCredsSetupCompleted": true
@@ -126,6 +133,5 @@
       "createdAt": "2026-09-05T13:28:49.960Z",
       "updatedAt": "2026-09-05T13:28:49.960Z"
     }
-  ],
-  "activeVersion": null
+  ]
 }

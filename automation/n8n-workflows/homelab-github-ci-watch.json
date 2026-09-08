@@ -2,12 +2,10 @@
   "id": "Fhh3XEcv6sH27L1w",
   "name": "Homelab GitHub CI watch",
   "active": false,
-  "activeVersionId": null,
   "createdAt": "2026-09-05T14:22:55.215Z",
   "updatedAt": "2026-09-05T14:23:04.506Z",
   "isArchived": false,
   "versionId": "adea6dce-2a28-4d91-9967-8a501de2a045",
-  "triggerCount": 0,
   "nodes": [
     {
       "parameters": {
@@ -62,7 +60,16 @@
     "executionOrder": "v1",
     "binaryMode": "separate"
   },
-  "staticData": null,
+  "staticData": {
+    "node:Daily 07:00": {
+      "recurrenceRules": [
+        null
+      ],
+      "recurrenceRuleSignatures": [
+        null
+      ]
+    }
+  },
   "pinData": {},
   "meta": {
     "templateCredsSetupCompleted": true
@@ -76,6 +83,5 @@
       "createdAt": "2026-09-05T14:22:55.235Z",
       "updatedAt": "2026-09-05T14:22:55.235Z"
     }
-  ],
-  "activeVersion": null
+  ]
 }

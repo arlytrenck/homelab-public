@@ -2,12 +2,10 @@
   "id": "KhJsz87UOY7OOi9Z",
   "name": "Homelab GitHub repo sync",
   "active": false,
-  "activeVersionId": null,
   "createdAt": "2026-09-05T14:08:59.197Z",
   "updatedAt": "2026-09-05T14:09:09.076Z",
   "isArchived": false,
   "versionId": "7468ff21-e255-4b6a-8355-018336a2afc1",
-  "triggerCount": 0,
   "nodes": [
     {
       "parameters": {
@@ -62,7 +60,16 @@
     "executionOrder": "v1",
     "binaryMode": "separate"
   },
-  "staticData": null,
+  "staticData": {
+    "node:Daily 00:45": {
+      "recurrenceRules": [
+        null
+      ],
+      "recurrenceRuleSignatures": [
+        null
+      ]
+    }
+  },
   "pinData": {},
   "meta": {
     "templateCredsSetupCompleted": true
@@ -76,6 +83,5 @@
       "createdAt": "2026-09-05T14:08:59.201Z",
       "updatedAt": "2026-09-05T14:08:59.201Z"
     }
-  ],
-  "activeVersion": null
+  ]
 }
