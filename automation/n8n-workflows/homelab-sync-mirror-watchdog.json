@@ -1,11 +1,11 @@
 {
-  "id": "ZtdVLFKJEmjMK947",
-  "name": "Homelab Seerr pending reminder",
+  "id": "mf3P6laUeuAzqh2R",
+  "name": "Homelab sync mirror watchdog",
   "active": false,
-  "createdAt": "2026-09-05T14:24:10.792Z",
-  "updatedAt": "2026-09-05T14:24:20.006Z",
+  "createdAt": "2026-09-06T16:30:52.683Z",
+  "updatedAt": "2026-09-06T16:31:19.000Z",
   "isArchived": false,
-  "versionId": "d69f118d-d28c-4c3b-ac81-7d53538c4219",
+  "versionId": "18b8e791-2bbf-48ba-af90-cd9b4617f70e",
   "nodes": [
     {
       "parameters": {
@@ -13,41 +13,41 @@
           "interval": [
             {
               "field": "cronExpression",
-              "expression": "0 9 * * 1,4"
+              "expression": "17 */6 * * *"
             }
           ]
         }
       },
-      "id": "de78427e-6b64-4a7e-8729-7e51a5888b61",
-      "name": "Mon+Thu 09:00",
+      "id": "aa98b0b4-756d-4ff0-8dff-023115fbe3b5",
+      "name": "Every 6h",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.2,
       "position": [
-        -400,
-        -144
+        0,
+        0
       ]
     },
     {
       "parameters": {
         "authentication": "privateKey",
-        "command": "/opt/homelab/toolkit/seerr-pending-reminder.sh"
+        "command": "/opt/homelab/toolkit/sync-mirror-watchdog.sh"
       },
-      "id": "c8d7db7c-5c35-4871-ac1f-81de371f6d53",
-      "name": "seerr-pending-reminder.sh",
+      "id": "7d7448ac-d717-4f13-9007-311220d34a85",
+      "name": "run check",
       "type": "n8n-nodes-base.ssh",
       "typeVersion": 1,
       "position": [
-        -144,
-        -144
+        272,
+        0
       ]
     }
   ],
   "connections": {
-    "Mon+Thu 09:00": {
+    "Every 6h": {
       "main": [
         [
           {
-            "node": "seerr-pending-reminder.sh",
+            "node": "run check",
             "type": "main",
             "index": 0
           }
@@ -57,11 +57,10 @@
   },
   "nodeGroups": [],
   "settings": {
-    "executionOrder": "v1",
-    "binaryMode": "separate"
+    "executionOrder": "v1"
   },
   "staticData": {
-    "node:Mon+Thu 09:00": {
+    "node:Every 6h": {
       "recurrenceRules": [
         null
       ],
@@ -70,18 +69,16 @@
       ]
     }
   },
-  "pinData": {},
-  "meta": {
-    "templateCredsSetupCompleted": true
-  },
+  "pinData": null,
+  "meta": null,
   "tags": [],
   "shared": [
     {
       "role": "workflow:owner",
-      "workflowId": "ZtdVLFKJEmjMK947",
+      "workflowId": "mf3P6laUeuAzqh2R",
       "projectId": "6bAks2n4cMYg55VL",
-      "createdAt": "2026-09-05T14:24:10.802Z",
-      "updatedAt": "2026-09-05T14:24:10.802Z"
+      "createdAt": "2026-09-06T16:30:52.687Z",
+      "updatedAt": "2026-09-06T16:30:52.687Z"
     }
   ]
 }

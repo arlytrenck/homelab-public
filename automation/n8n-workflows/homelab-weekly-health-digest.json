@@ -2,12 +2,10 @@
   "id": "DKlWadKBcAFETj8F",
   "name": "Homelab weekly health digest",
   "active": false,
-  "activeVersionId": null,
   "createdAt": "2026-09-05T14:10:30.981Z",
   "updatedAt": "2026-09-05T14:10:40.489Z",
   "isArchived": false,
   "versionId": "b28796ce-b481-4024-9007-4eacfffeec8a",
-  "triggerCount": 0,
   "nodes": [
     {
       "parameters": {
@@ -62,7 +60,16 @@
     "executionOrder": "v1",
     "binaryMode": "separate"
   },
-  "staticData": null,
+  "staticData": {
+    "node:Sunday 09:00": {
+      "recurrenceRules": [
+        null
+      ],
+      "recurrenceRuleSignatures": [
+        null
+      ]
+    }
+  },
   "pinData": {},
   "meta": {
     "templateCredsSetupCompleted": true
@@ -76,6 +83,5 @@
       "createdAt": "2026-09-05T14:10:30.990Z",
       "updatedAt": "2026-09-05T14:10:30.990Z"
     }
-  ],
-  "activeVersion": null
+  ]
 }

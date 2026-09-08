@@ -63,6 +63,20 @@ starting set if you're deciding what to automate first:
 - **GitHub CI watch** — a daily check that stays silent unless something's
   actually red; a "still fine" message every day would just train you to
   ignore it.
+- **LAN DNS health** — every 20 minutes: does the local resolver answer at
+  all, do the split-horizon rewrites still hand back the internal address
+  rather than the public one, and does external recursion still work. A
+  resolver that quits breaks every internal name at once, and the host's own
+  fallbacks mean nothing else notices.
+- **Hypervisor node health** — a read-only SSH check of the virtualization
+  host from inside the guest. Swap pressure, a failed unit or a degraded pool
+  on the hypervisor is invisible to monitoring that runs inside the VM it
+  would take down with it.
+- **Mirror watchdog** — checks that the nightly storage mirror is tracking,
+  not merely exiting. A truncated read over a network share can convince
+  rsync that thousands of files vanished, trip its delete guard, and abort
+  the run, leaving the mirror frozen while blocked deletions pile up out of
+  sight.
 - **Pending-request reminder** — an example of automating around a known
   gap (here: a media-request tool with nothing downstream to fulfill
   requests) rather than only automating the happy path.
