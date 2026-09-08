@@ -6,11 +6,17 @@ as `external: true`. Those networks must exist before those stacks come up
 
 ## `frontend`  (bridge)
 
-Cross-stack network so `homepage` can reach `grafana` / `prometheus` by name.
+Cross-stack network so services in different Compose projects can reach each
+other by container name instead of publishing a port on the LAN IP.
 
 - **Created by:** this file's `bootstrap.sh` (or `docker network create frontend`).
-- **Attached by:** `frontend/` (homepage), `monitoring/` (prometheus, grafana) —
-  each declares it `external: true`.
+- **Attached by:** five stacks, each declaring it `external: true` —
+  `frontend/` (homepage), `monitoring/` (prometheus, grafana, gotify,
+  alertmanager), `analytics/` (umami), `automation/` (n8n), and
+  `networking/` (adguardhome).
+
+All five fail to start if the network doesn't exist, so `bootstrap.sh` runs
+before any of them — including this directory's own compose file.
 
 ```sh
 bash networking/bootstrap.sh
@@ -26,7 +32,9 @@ here — just bring `media/` up before `frontend/`.
 ## Boot order
 
 ```
-networking bootstrap  ->  media  ->  monitoring  ->  identity  ->  security
-                      ->  media/immich  ->  frontend
+networking bootstrap          (creates the external `frontend` network)
+  ->  networking  ->  media  ->  monitoring  ->  identity  ->  security
+  ->  media/immich  ->  automation  ->  analytics  ->  frontend
 ```
-`frontend` last: it depends on both the `frontend` network and `media_default`.
+Bootstrap first: five stacks won't start without the `frontend` network.
+`frontend` last: it needs both `frontend` and `media_default`.

@@ -6,6 +6,37 @@ Notable changes to this repo. No version tags — entries grouped by date
 
 ## [Unreleased]
 
+### Fixed (2026-09-08 — documentation drift)
+Docs that no longer matched the compose files, found in a review pass. No
+config changed; only the prose describing it.
+- **Uptime Kuma's port** in `docs/service-catalog.md` said `3001` (Grafana's
+  host port). It's `3002` — `network_mode: host`, `UPTIME_KUMA_PORT=3002`.
+- **The `frontend` network** was described as three containers across two
+  stacks in the README, `docs/architecture.md`, and `networking/README.md`.
+  It's eight containers across five: homepage, prometheus, grafana, gotify,
+  alertmanager, umami, n8n, adguardhome. The **boot order** in the latter two
+  also omitted `automation` and `analytics`, both of which now fail to start
+  if the bootstrap hasn't run.
+- **FlareSolverr** was still in `docs/architecture.md`'s media data flow;
+  it was removed from `media/` on 2026-09-07.
+- **UPS monitoring** (added 2026-09-06) never reached the reference docs:
+  `nut-exporter` is now in `docs/service-catalog.md` and the
+  `docs/monitoring-and-alerting.md` component list/diagram, and the `ups`
+  rule group is in that doc's coverage table.
+- **Stack/container counts** — "~30 containers across 7 stacks" is ~35 across
+  9 Compose projects (README, `docs/architecture.md`,
+  `docs/getting-started.md`).
+- **`docs/getting-started.md`'s placeholder table** promised a complete
+  find-and-replace list but omitted `10.0.0.9`, `10.0.0.0/24`, `myups`, and
+  `ups-host`; a reader following it got a silently broken UPS scrape and a
+  proxy ACL on the wrong subnet.
+- **`docs/secrets.md`** was referenced by `docs/env-inventory.md` but has
+  never existed; fixed in `tools/gen-env-examples.sh` so it survives
+  regeneration.
+- **`docs/renovate.md`, `docs/maintenance-calendar.md`, and
+  `docs/resource-library.md`** are now linked from the README's Further
+  reading; the latter two weren't reachable from anywhere.
+
 ### Changed (2026-09-07 — deprecated-image cleanup)
 - **promtail → Grafana Alloy** in `monitoring/`. Grafana deprecated promtail
   (Feb 2025); Alloy is the successor. New `monitoring/alloy/config.alloy`
