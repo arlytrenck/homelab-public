@@ -7,6 +7,16 @@ than a released artifact, so there's nothing to cut a release around and no
 [Keep a Changelog](https://keepachangelog.com/): Added, Changed, Deprecated,
 Removed, Fixed, Security.
 
+## 2026-09-09
+
+### Fixed
+
+- `networking/adguardhome` was the one service missing a `healthcheck` and
+  `TZ`, both of which the README and `docs/hardening-conventions.md` say
+  every service has. Added a web-UI `wget` healthcheck (deliberately not a
+  DNS query, and deliberately not `autoheal`-labelled: see the inline
+  comment) and `TZ=America/New_York`.
+
 ## 2026-09-08
 
 ### Added

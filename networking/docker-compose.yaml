@@ -28,6 +28,8 @@ services:
       - no-new-privileges:true
     mem_limit: 256m
     pids_limit: 256
+    environment:
+      - TZ=America/New_York
     ports:
       - "10.0.0.10:53:53/tcp"
       - "10.0.0.10:53:53/udp"
@@ -35,6 +37,16 @@ services:
     volumes:
       - ./adguard/work:/opt/adguardhome/work
       - ./adguard/conf:/opt/adguardhome/conf
+    # Hits the web UI (BusyBox wget is in the image), not DNS: a DNS-query
+    # healthcheck on the box that *is* DNS risks a restart loop. Deliberately
+    # not autoheal-labelled: an auto-restart of the LAN resolver mid-query is
+    # its own small outage, so alert on this one and decide by hand.
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:3000/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
     logging:
       driver: json-file
       options:
