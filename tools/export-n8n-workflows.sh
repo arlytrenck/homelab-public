@@ -44,6 +44,11 @@ EXCLUDE = {
     # embeds a Gotify application token directly in node parameters, and is
     # site-publishing automation rather than homelab infrastructure
     "Homelab blog post: deploy + LinkedIn draft",
+    # same category: publishes to the trenck.net repo, not homelab
+    # infrastructure. No embedded secret this time, but its command path
+    # (/home/arly/...) would be refused by the FORBIDDEN scan below anyway
+    # -- excluded explicitly so this is a documented choice, not a surprise.
+    "Homelab blog publish next draft",
 }
 
 # The placeholder LAN addresses this repo documents; anything else that looks
