@@ -41,6 +41,32 @@ belongs on shared/network storage; a job's *working* directory belongs on
 the fastest local disk you have, moved back to shared storage only once the
 job finishes.
 
+## When the mount options are all workarounds, change the protocol
+
+The Linux host mounted the NAS over SMB/CIFS because that's what got set up
+first. Over time the `fstab` line accreted options: `nobrl` (byte-range
+locking off, to stop SQLite errors on the share), `soft` (I/O returns an
+error on a timeout instead of blocking), `actimeo=1` (attribute caching
+nearly disabled, to paper over cache-coherence bugs). Each one was added to
+suppress a symptom. None was a tuning *choice*.
+
+That's the tell. A stack of options whose only job is to make a protocol
+behave less like itself means the protocol is wrong for the workload. For a
+Linux host talking to a NAS — machine to machine, no Windows client in the
+picture — NFS is the fit: real POSIX locking (drop `nobrl`), reliable
+cross-directory hardlinks (so a media manager can import by hardlink instead
+of copying the file twice), faster directory walks, and `hard` mount
+semantics that pause and resume across a blip instead of erroring out a
+half-written file. The migration was a one-line `fstab` change plus an
+export on the NAS; the mountpoint stayed identical, so nothing downstream
+had to move.
+
+The gotcha to plan for: NFS passes through the server's uid/gid rather than
+forcing one client-side like `uid=1000` did over SMB. A throwaway test mount
+first — check `ls -n` shows the ownership you expect, and that a
+cross-directory `ln` actually succeeds — is cheaper than finding out during
+the cutover.
+
 ## A clustering feature can be worse than none, for a single node
 
 Alertmanager supports a gossip-protocol cluster for high-availability pairs.
