@@ -48,9 +48,9 @@ Left on by default with only one Alertmanager instance running, it wedged
 the notification dispatcher after a batch of failed deliveries and silently
 stopped delivering *any* alert until the container was restarted — which is
 exactly the failure mode alerting exists to catch you *not* noticing.
-`--cluster.listen-address=` (empty) disables it. If you're not running an HA
-pair, don't leave HA features on "in case" — verify what they actually do
-when a peer never shows up.
+`--cluster.listen-address=` (empty) disables it. A gossip cluster with no
+peer to gossip with isn't a no-op; it's a single point of failure wearing an
+HA feature's name.
 
 ## A stale `:latest` tag can quietly stop moving
 
@@ -80,10 +80,9 @@ some cron-driven backup scripts real run-history and a UI, instead of a
 silent crontab. It was removed the same day: the workflow-automation tool
 already running here (n8n) could do the exact same job — trigger a script
 over SSH on a schedule, log the result, alert on failure — via one workflow
-using a feature it already had, at zero additional memory footprint. The
-dedicated tool's actual advantages (multi-user RBAC, audit policies) matter
-for a team, not a single-operator homelab. Before adding a new service,
-check whether something you're already running can do 90% of the job first.
+using a feature it already had, at zero additional memory footprint. Rundeck's
+actual advantages, multi-user RBAC and audit policies, are answers to a
+question a single-operator homelab never asked.
 
 ## A forward-auth block and an authorization rule are two separate steps
 
@@ -97,9 +96,9 @@ including from the person who configured it, because the auth service's
 default policy for anything it doesn't recognize is deny. The failure mode
 looks like a network/firewall problem (a wrong IP allowlist, a NAT
 oddity) long before it looks like "I forgot the other half," because
-nothing about the proxy config is actually wrong. If a new forward-auth
-vhost 403s everyone regardless of source, check the auth service's own
-access-control rules before anything else.
+nothing about the proxy config is actually wrong. This one has cost more
+debugging time here than any other single mistake, and it's always the
+same missing half.
 
 ## A dashboard panel with more than one query needs a unique ID per query
 
