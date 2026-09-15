@@ -25,9 +25,6 @@ repos:
         args: ["--maxkb=512"]
       - id: check-yaml
         args: ["--allow-multiple-documents"]
-        # Homepage's services.yaml/widgets.yaml use {{HOMEPAGE_VAR_*}} template
-        # placeholders that are not valid YAML until Homepage resolves them.
-        exclude: '^frontend/homepage/(services|widgets|settings)\.yaml$'
 
   - repo: local
     hooks:
