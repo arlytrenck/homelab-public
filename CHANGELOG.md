@@ -7,6 +7,36 @@ than a released artifact, so there's nothing to cut a release around and no
 [Keep a Changelog](https://keepachangelog.com/): Added, Changed, Deprecated,
 Removed, Fixed, Security.
 
+## 2026-09-22
+
+### Fixed
+
+- **`analytics/umami-db` was missing `stop_grace_period: 60s`** — every other
+  Postgres container in the repo (`jellystat-db`, immich's `database`) sets
+  it so the checkpoint finishes cleanly on `docker compose down`/`stop`
+  instead of a SIGKILL under the default 10-second grace period; this one
+  had drifted from that convention. Added it.
+- **`analytics/umami` had no `healthcheck`** — the only long-running service
+  in the repo with neither a healthcheck nor a comment explaining why (unlike
+  `loki`/`alloy`, which are distroless and say so). Added a `curl`-based
+  check against its own port (the image's runner stage installs `curl`) and
+  the `autoheal=true` label the rest of the stateless web services carry.
+- **`monitoring/alertmanager-gotify` carried `autoheal=true`** — this is the
+  other half of the alert-delivery path `gotify` sits on, and `gotify`'s own
+  label is deliberately omitted with a comment explaining why (a mis-firing
+  healthcheck plus autoheal on that path could loop or mask the outage it's
+  supposed to report). The bridge had no healthcheck either, so the label
+  was inert rather than actively wrong, but it contradicted the documented
+  design and would misfire the moment someone added one. Removed the label
+  and added the matching comment.
+- **CI Actions pinned to a commit SHA** — `gitleaks/gitleaks-action@v2` and
+  `renovatebot/github-action@v46.2.6` were referenced by mutable tag; a repo
+  whose whole point is showing a hardened setup shouldn't leave its own CI
+  supply chain unpinned. Pinned both to the commit the tag currently
+  resolves to, with a `# vX.Y.Z` comment. Part of #6 — the `github-actions`
+  Renovate manager needed for pinned SHAs to still get bump PRs was already
+  in `renovate.json`.
+
 ## 2026-09-09
 
 ### Fixed

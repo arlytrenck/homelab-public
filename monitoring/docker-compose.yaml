@@ -348,8 +348,10 @@ services:
       - default
     depends_on:
       - gotify
-    labels:
-      - "autoheal=true"
+    # no autoheal here either: this bridge is the other half of the same
+    # alert-delivery path as gotify above, so the same risk applies (a
+    # mis-firing healthcheck + autoheal could loop or mask the outage it's
+    # supposed to report). Watch it from uptime-kuma instead.
 
   # --- self-healing --------------------------------------------------------------
   # Restarts a container ONLY when Docker reports it `unhealthy` AND it carries
