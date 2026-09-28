@@ -52,9 +52,25 @@ Be honest about the gaps:
    encryption). If you lose them, every encrypted backup is unrecoverable.
    Keep an offline copy (paper, a hardware token, a separate encrypted
    volume you control) and test that it decrypts, quarterly.
-5. **Media / bulk data.** The library itself lives on the NAS and is not in
-   this backup — it's treated as replaceable. Decide consciously whether
-   that's acceptable for *your* library.
+5. **Data on the NAS that is not in this backup.** Whatever else lives on the
+   share is covered by the mirror alone, so it inherits gap 1: two copies, one
+   location. The trap is treating all of it as one category. Sort it first:
+
+   - *Re-acquirable* (a media library you can re-download, a container image,
+     a build artifact). Excluding it is a defensible decision. Say so
+     explicitly rather than letting the exclusion look like an oversight.
+   - *Not re-acquirable* (family photographs, correspondence, anything with a
+     capture date you cannot reproduce). This is the row that matters, and it
+     is usually a small minority of the volume. A few tens of GB of photos
+     next to tens of TB of video looks like one problem in `df` output, and
+     backing up the whole share to protect the photos costs 40 TB of transfer
+     to save 80 GB.
+
+   Then state the RPO and the RTO for the second group separately. If the RTO
+   has never been measured, say that, and say why: with no third copy there is
+   nothing to restore from, so a timing taken from the same-building mirror
+   measures the wrong scenario and will read faster than the case you actually
+   care about.
 6. **Ransomware / a compromised host.** The host can write to the NAS mount,
    so malware on the host can encrypt the backups too. Mitigations:
    restic's append-only mode on a remote repo, NAS snapshots the host
