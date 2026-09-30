@@ -31,13 +31,13 @@ that shaped the conventions here, so you can skip repeating them.
 | `monitoring/` | `docker-compose.yaml` | Prometheus, Grafana, node-exporter, cAdvisor, Uptime Kuma, Dozzle, Gotify, Alertmanager (+ a Gotify bridge), autoheal, Loki + Alloy |
 | `security/` | `docker-compose.yaml` | Vaultwarden |
 | `automation/` | `docker-compose.yaml` | n8n |
-| `analytics/` | `docker-compose.yaml` | Umami (+ its db) — self-hosted website analytics |
+| `analytics/` | `docker-compose.yaml` | Plausible CE (+ Postgres and ClickHouse) — self-hosted, cookie-free website analytics |
 | `networking/` | `bootstrap.sh` + `docker-compose.yaml` (AdGuard Home) + `README.md` | creates the shared external `frontend` Docker network; AdGuard Home = LAN DNS split-horizon + ad blocking |
 
 One Compose project per directory; the project `name:` is set explicitly in
 each file. `frontend` is an **external** Docker network shared by eight
 containers across five stacks — `homepage`, `prometheus`, `grafana`,
-`gotify`, `alertmanager`, `umami`, `n8n`, `adguardhome` — so they can reach
+`gotify`, `alertmanager`, `plausible`, `n8n`, `adguardhome` — so they can reach
 each other by container name without publishing more than necessary.
 `networking/bootstrap.sh` creates it idempotently, and it has to exist before
 any of those five stacks come up. `homepage` also joins `media_default` (the

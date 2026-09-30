@@ -12,7 +12,7 @@ other by container name instead of publishing a port on the LAN IP.
 - **Created by:** this file's `bootstrap.sh` (or `docker network create frontend`).
 - **Attached by:** five stacks, each declaring it `external: true` —
   `frontend/` (homepage), `monitoring/` (prometheus, grafana, gotify,
-  alertmanager), `analytics/` (umami), `automation/` (n8n), and
+  alertmanager), `analytics/` (plausible), `automation/` (n8n), and
   `networking/` (adguardhome).
 
 All five fail to start if the network doesn't exist, so `bootstrap.sh` runs

@@ -7,6 +7,15 @@ than a released artifact, so there's nothing to cut a release around and no
 [Keep a Changelog](https://keepachangelog.com/): Added, Changed, Deprecated,
 Removed, Fixed, Security.
 
+## 2026-09-30
+
+### Changed
+- **`analytics/` is Plausible CE now, not Umami.** Three containers (Plausible, Postgres,
+  ClickHouse with upstream's low-resource configs in `analytics/clickhouse/`), published on
+  `127.0.0.1:3006` only, registration disabled. Secrets are `PLAUSIBLE_DB_PASS`,
+  `PLAUSIBLE_SECRET_KEY_BASE` and `PLAUSIBLE_TOTP_VAULT_KEY`, all `${VAR:?required}`.
+  Service catalog, env inventory, architecture and the `frontend` network list updated to match.
+
 ## 2026-09-22
 
 ### Fixed
