@@ -31,7 +31,7 @@ Compose. ~35 containers across 9 Compose projects (see the
 - Two Docker networks cross stack boundaries. `frontend` (external, created
   once by `networking/bootstrap.sh`) is joined by eight containers across
   five stacks — `homepage` (frontend), `prometheus`, `grafana`, `gotify`,
-  `alertmanager` (monitoring), `umami` (analytics), `n8n` (automation), and
+  `alertmanager` (monitoring), `plausible` (analytics), `n8n` (automation), and
   `adguardhome` (networking) — so they resolve each other by container name
   instead of publishing on the LAN IP. `media_default` (auto-created by the
   `media/` project) lets `homepage`'s dashboard widgets reach Emby/`*arr` by

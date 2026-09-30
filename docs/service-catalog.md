@@ -74,8 +74,9 @@ posture, and how it's updated and backed up. Hostnames are placeholders
 | Service | Port | Reach | Auth | Updates | State / backup |
 |---------|------|-------|------|---------|----------------|
 | n8n | 5678 | `n8n.example.com` | SSO (two-factor) — webhooks need a path exception | Renovate | data dir in `/docker` rsync; encryption key in `.env` |
-| umami | 3006→3000 | LAN IP + `stats.example.com` | own login (collect endpoint is public) | Renovate | Postgres |
-| umami-db | internal | — | — | Renovate | see umami |
+| plausible | 127.0.0.1:3006→8000 | `stats.example.com` | own login, registration off (tracking script and `/api/event` are public) | Renovate | Postgres + ClickHouse |
+| plausible-db | internal | — | — | Renovate | users, sites, config; see plausible |
+| plausible-events-db | internal | — | — | Renovate | ClickHouse event store; the heavy part (about 2.5 GB of `mem_limit`s in total) |
 | adguard-home | 53 (+ 3007 UI) | LAN IP:53 + `adg.example.com` | SSO on the UI | Renovate | config via its REST API; conf dir in `/docker` rsync |
 
 ## Notes

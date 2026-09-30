@@ -1,13 +1,20 @@
-# analytics stack: Umami (self-hosted, privacy-friendly website analytics).
+# analytics stack: Plausible Community Edition (self-hosted, cookie-free website
+# analytics for example.com). https://github.com/plausible/community-edition
+# Replaces Umami (2026-09-28).
 #
-# Publicly deployed for example.com — a dedicated reverse-proxy vhost exposes
-# just the tracking script + collect endpoint (and Umami's own login-gated
-# dashboard) to the internet; no LAN-guard or SSO in front, since the
-# tracking script has to be reachable by anonymous visitors. Postgres-backed
-# per upstream's own image variant.
+# Three containers: Plausible (Elixir app), Postgres (users/sites/config) and
+# ClickHouse (the event store). ClickHouse is the heavy part: upstream recommends
+# 2 GB RAM for ClickHouse + Plausible together, so the mem_limits below add up to
+# ~2.5 GB. ./clickhouse/*.xml are upstream's low-resource ClickHouse configs.
 #
-# Secrets (DB password, app secret, 2FA encryption key) live in ./.env
-# (chmod 600, gitignored).
+# Published on 127.0.0.1:3006 only; the stats.example.com vhost (public, no Authelia:
+# the tracking script and /api/event must be reachable by any visitor's browser)
+# proxies to it. Registration is disabled: create the one admin with the
+# bootstrap step in README.md, then it stays closed.
+#
+# Secrets live in ./.env (chmod 600, gitignored). Template: ./.env.example
+# Upgrade: bump the image tag (Renovate), read the release notes for ClickHouse
+# bumps, then docker compose pull && docker compose up -d
 name: analytics
 
 x-common: &common
@@ -20,58 +27,94 @@ x-common: &common
       max-file: "5"
 
 services:
-  umami-db:
+  plausible-db:
     <<: *common
-    mem_limit: 512m
+    mem_limit: 384m
     pids_limit: 256
     image: postgres:16-alpine
-    container_name: umami-db
+    container_name: plausible-db
     restart: unless-stopped
-    stop_grace_period: 60s
     environment:
-      - POSTGRES_DB=umami
-      - POSTGRES_USER=umami
-      - POSTGRES_PASSWORD=${UMAMI_DB_PASS:?required}
+      - POSTGRES_DB=plausible_db
+      - POSTGRES_USER=plausible
+      - POSTGRES_PASSWORD=${PLAUSIBLE_DB_PASS:?required}
     volumes:
-      - umami_db_data:/var/lib/postgresql/data
+      - plausible_db_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U umami -d umami"]
+      test: ["CMD-SHELL", "pg_isready -U plausible -d plausible_db"]
       interval: 10s
       timeout: 5s
       retries: 5
-      start_period: 20s
+      start_period: 30s
 
-  umami:
+  plausible-events-db:
     <<: *common
-    mem_limit: 512m
-    pids_limit: 256
-    image: ghcr.io/umami-software/umami:postgresql-latest
-    container_name: umami
+    mem_limit: 1536m
+    pids_limit: 1024
+    image: clickhouse/clickhouse-server:24.12-alpine
+    container_name: plausible-events-db
     restart: unless-stopped
+    volumes:
+      - plausible_event_data:/var/lib/clickhouse
+      - plausible_event_logs:/var/log/clickhouse-server
+      - ./clickhouse/logs.xml:/etc/clickhouse-server/config.d/logs.xml:ro
+      - ./clickhouse/ipv4-only.xml:/etc/clickhouse-server/config.d/ipv4-only.xml:ro
+      - ./clickhouse/low-resources.xml:/etc/clickhouse-server/config.d/low-resources.xml:ro
+    ulimits:
+      nofile:
+        soft: 262144
+        hard: 262144
+    environment:
+      - CLICKHOUSE_SKIP_USER_SETUP=1
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 -O - http://127.0.0.1:8123/ping || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+
+  plausible:
+    <<: *common
+    mem_limit: 768m
+    pids_limit: 512
+    image: ghcr.io/plausible/community-edition:v3.2.1
+    container_name: plausible
+    restart: unless-stopped
+    command: sh -c "/entrypoint.sh db createdb && /entrypoint.sh db migrate && /entrypoint.sh run"
     depends_on:
-      umami-db:
+      plausible-db:
+        condition: service_healthy
+      plausible-events-db:
         condition: service_healthy
     environment:
-      - DATABASE_URL=postgresql://umami:${UMAMI_DB_PASS:?required}@umami-db:5432/umami
-      - APP_SECRET=${UMAMI_APP_SECRET:?required}
-      - TWO_FACTOR_ENCRYPTION_KEY=${UMAMI_TWO_FACTOR_ENCRYPTION_KEY:?required}
+      - TMPDIR=/var/lib/plausible/tmp
+      - BASE_URL=https://stats.example.com
+      - SECRET_KEY_BASE=${PLAUSIBLE_SECRET_KEY_BASE:?required}
+      - TOTP_VAULT_KEY=${PLAUSIBLE_TOTP_VAULT_KEY:?required}
+      - DISABLE_REGISTRATION=true
+      - DATABASE_URL=postgres://plausible:${PLAUSIBLE_DB_PASS:?required}@plausible-db:5432/plausible_db
+      - CLICKHOUSE_DATABASE_URL=http://plausible-events-db:8123/plausible_events_db
+    volumes:
+      - plausible_data:/var/lib/plausible
+    ulimits:
+      nofile:
+        soft: 65535
+        hard: 65535
     ports:
-      - "127.0.0.1:3006:3000"
-      - "10.0.0.10:3006:3000"
-    healthcheck:
-      test: ["CMD-SHELL", "curl -fsS -o /dev/null http://127.0.0.1:3000/ || exit 1"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
-    labels:
-      - "autoheal=true"
+      - "127.0.0.1:3006:8000"
+    # No healthcheck / autoheal label yet: upstream ships none and it is not
+    # verified which HTTP client the image carries. Add one after checking
+    # `docker exec plausible sh -c 'command -v wget curl'`; homepage's siteMonitor
+    # on /api/health covers liveness meanwhile.
     networks:
       - default
       - frontend
 
 volumes:
-  umami_db_data:
+  plausible_db_data:
+  plausible_event_data:
+  plausible_event_logs:
+  plausible_data:
 
 networks:
   default:

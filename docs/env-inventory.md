@@ -6,9 +6,9 @@ _(a password manager entry, your private inventory) — never the value itself._
 
 | stack | key | compose default |
 |---|---|---|
-| analytics | `UMAMI_APP_SECRET` | changeme-long-random |
-| analytics | `UMAMI_DB_PASS` | changeme-long-random |
-| analytics | `UMAMI_TWO_FACTOR_ENCRYPTION_KEY` | 0000000000000000000000000000000000000000000000000000000000000000 |
+| analytics | `PLAUSIBLE_DB_PASS` | changeme-long-random |
+| analytics | `PLAUSIBLE_SECRET_KEY_BASE` | changeme-at-least-64-bytes-of-random-base64-changeme-changeme-changeme |
+| analytics | `PLAUSIBLE_TOTP_VAULT_KEY` | changeme-32-bytes-base64-changeme= |
 | automation | `N8N_API_KEY` | — |
 | automation | `N8N_ENCRYPTION_KEY` | — |
 | automation | `N8N_EXPORT_REWRITES` | /your/toolkit/path=/opt/homelab; /scripts/= /opt/homelab/scripts/ |
