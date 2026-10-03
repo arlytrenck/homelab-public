@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/assets/logo.svg" alt="homelab-public" width="480">
+</p>
+
 # homelab-public
 
 A sanitized, public mirror of the Docker Compose infrastructure-as-code
