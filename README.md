@@ -114,6 +114,9 @@ scripts write to).
   stack to catch a syntax error or a bad `${VAR:?required}` before it reaches
   a host. Seeds a throwaway `.env` from each stack's `.env.example` so a
   required-variable check doesn't fail on an intentionally-blank placeholder.
+- **`tools/dockle-scan.sh`** — lints every compose image with Dockle. Runs in
+  `.github/workflows/dockle.yml` (weekly, on demand, and on compose-file PRs),
+  report-only until the first run is triaged.
 - **CI** (`.github/workflows/validate.yml`) runs all three checks — a
   [gitleaks](https://github.com/gitleaks/gitleaks) secret scan, compose
   validation, and `.env.example` drift — on every push. The same three run

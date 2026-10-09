@@ -1,0 +1,4 @@
+# Image substrings to leave out of the CI scan (one per line). Use for images
+# too large to pull on a runner. Scan those on the host with
+# homelab-infra toolkit/dockle-audit.sh instead.
+immich-machine-learning
