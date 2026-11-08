@@ -16,6 +16,17 @@ Removed, Fixed, Security.
   `PLAUSIBLE_SECRET_KEY_BASE` and `PLAUSIBLE_TOTP_VAULT_KEY`, all `${VAR:?required}`.
   Service catalog, env inventory, architecture and the `frontend` network list updated to match.
 
+## 2026-09-28
+
+### Added
+
+- **Dockle image lint** — `tools/dockle-scan.sh` runs
+  [Dockle](https://github.com/goodwithtech/dockle) (CIS Docker benchmark checks
+  plus image best practices) against every image the compose files reference.
+  `.github/workflows/dockle.yml` runs it weekly, on demand, and on PRs that touch
+  a compose file. Report-only until the first run is triaged into
+  `tools/dockle-ignore.txt`; `--strict` then fails on FATAL findings.
+
 ## 2026-09-22
 
 ### Fixed

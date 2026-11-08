@@ -1,0 +1,4 @@
+# Dockle checkpoint codes to ignore, one per line, each with the reason it is
+# accepted. Empty on purpose: triage the first tools/dockle-scan.sh run, then
+# record each accepted finding here. Example:
+#   CIS-DI-0001   # upstream image runs as root by design, mitigated by no-new-privileges

@@ -1,0 +1,29 @@
+name: dockle
+
+# Image lint is report-only for now and pulls every image, so it does not run on
+# every push. It runs weekly, on demand, and when a compose file changes in a PR.
+on:
+  schedule:
+    - cron: "0 9 * * 1"
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - "**/docker-compose.y*ml"
+      - "**/compose.y*ml"
+      - "tools/dockle-*"
+
+permissions:
+  contents: read
+
+jobs:
+  dockle:
+    name: dockle image lint (report only)
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v5
+      - name: scan every compose image
+        # Switch to `--strict` once the first run has been triaged into
+        # tools/dockle-ignore.txt.
+        run: bash tools/dockle-scan.sh
